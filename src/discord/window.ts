@@ -550,7 +550,12 @@ export function createWindow() {
     const mainWindow = new BrowserWindow(browserWindowOptions);
 
     // Restore by position + size directly to match saveWindowState roundtrip.
-    if (storedBounds.x !== undefined && storedBounds.y !== undefined) {
+    if (
+        storedBounds.x !== undefined &&
+        storedBounds.y !== undefined &&
+        storedBounds.width !== undefined &&
+        storedBounds.height !== undefined
+    ) {
         mainWindow.setPosition(storedBounds.x, storedBounds.y);
         mainWindow.setSize(storedBounds.width, storedBounds.height);
     }
