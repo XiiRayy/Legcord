@@ -20,6 +20,13 @@ import { forceQuit, setForceQuit } from "../common/forceQuit.js";
 import { handleCommands, passedValidArgument } from "../common/handleCommands.js";
 import { getLang } from "../common/lang.js";
 import { injectThemesMain } from "../common/themes.js";
+import {
+    DEFAULT_WINDOW_HEIGHT,
+    DEFAULT_WINDOW_WIDTH,
+    MIN_WINDOW_HEIGHT,
+    MIN_WINDOW_WIDTH,
+    sanitizeWindowBounds,
+} from "../common/windowBounds.js";
 import { getWindowState, setWindowState } from "../common/windowState.js";
 import { disconnectDbusService } from "../dbus.js";
 import { init } from "../main.js";
@@ -34,27 +41,17 @@ import { registerVenmicIpc } from "./venmic.js";
 export let mainWindows: BrowserWindow[] = [];
 export let inviteWindow: BrowserWindow;
 
-function getStoredWindowBounds(): BrowserWindowConstructorOptions {
-    const width = getWindowState("width") ?? 835;
-    const height = getWindowState("height") ?? 600;
-    const x = getWindowState("x");
-    const y = getWindowState("y");
-
-    if (x === undefined || y === undefined) {
-        return {
-            width,
-            height,
-        };
-    }
-
-    // Return the stored window coordinates as-is.
-    // Restore uses setPosition/setSize for a direct API roundtrip.
-    return {
-        width,
-        height,
-        x,
-        y,
-    };
+function getStoredWindowBounds() {
+    return sanitizeWindowBounds(
+        {
+            width: getWindowState("width"),
+            height: getWindowState("height"),
+            x: getWindowState("x"),
+            y: getWindowState("y"),
+            displayId: getWindowState("displayId"),
+        },
+        screen.getAllDisplays(),
+    );
 }
 
 // Save window bounds using the same API family we restore with.
@@ -63,16 +60,25 @@ function saveWindowState(win: BrowserWindow): void {
     try {
         const [x, y] = win.getPosition();
         const [width, height] = win.getSize();
-        const display = screen.getDisplayNearestPoint({ x, y });
+        const sanitized = sanitizeWindowBounds(
+            {
+                width,
+                height,
+                x,
+                y,
+                displayId: screen.getDisplayNearestPoint({ x, y }).id,
+            },
+            screen.getAllDisplays(),
+        );
 
         setWindowState({
-            width,
-            height,
+            width: sanitized.width,
+            height: sanitized.height,
             isMaximized: win.isMaximized(),
-            x,
-            y,
-            displayId: display.id,
-            displayScaleFactor: display.scaleFactor,
+            x: sanitized.x,
+            y: sanitized.y,
+            displayId: sanitized.displayId,
+            displayScaleFactor: sanitized.displayScaleFactor,
         });
     } catch (e) {
         console.log("[Window] Failed to save window state:", e);
@@ -137,7 +143,7 @@ contextMenu({
 function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
     createTray();
     if (getWindowState("isMaximized") ?? false) {
-        passedWindow.setSize(835, 600); //just so the whole thing doesn't cover whole screen
+        passedWindow.setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT); //just so the whole thing doesn't cover whole screen
         passedWindow.maximize();
         void passedWindow.webContents.executeJavaScript(`document.body.setAttribute("isMaximized", "");`);
         passedWindow.hide(); // please don't flashbang the user
@@ -488,10 +494,15 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
 
 export function createWindow() {
     const storedBounds = getStoredWindowBounds();
+    if (storedBounds.usedFallback) {
+        console.log("[Window] Stored bounds were invalid or off-screen; using sanitized placement", storedBounds);
+    }
     const browserWindowOptions: BrowserWindowConstructorOptions = {
-        // Use safe defaults for constructor; actual bounds applied via setBounds() below
-        width: 835,
-        height: 600,
+        // Use safe defaults for constructor; actual bounds applied via setPosition/setSize below
+        width: DEFAULT_WINDOW_WIDTH,
+        height: DEFAULT_WINDOW_HEIGHT,
+        minWidth: MIN_WINDOW_WIDTH,
+        minHeight: MIN_WINDOW_HEIGHT,
         title: "Legcord",
         show: false,
         darkTheme: true,
@@ -554,10 +565,8 @@ export function createWindow() {
     const mainWindow = new BrowserWindow(browserWindowOptions);
 
     // Restore by position + size directly to match saveWindowState roundtrip.
-    if (storedBounds.x !== undefined && storedBounds.y !== undefined) {
-        mainWindow.setPosition(storedBounds.x, storedBounds.y);
-        mainWindow.setSize(storedBounds.width, storedBounds.height);
-    }
+    mainWindow.setPosition(storedBounds.x, storedBounds.y);
+    mainWindow.setSize(storedBounds.width, storedBounds.height);
 
     mainWindows.push(mainWindow);
     doAfterDefiningTheWindow(mainWindow);
