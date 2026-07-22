@@ -17,9 +17,11 @@ import contextMenu from "electron-context-menu";
 import { firstRun, getConfig, setConfig } from "../common/config.js";
 import { navigateTo } from "../common/dom.js";
 import { forceQuit, setForceQuit } from "../common/forceQuit.js";
+import { handleCommands, passedValidArgument } from "../common/handleCommands.js";
 import { getLang } from "../common/lang.js";
 import { injectThemesMain } from "../common/themes.js";
 import { getWindowState, setWindowState } from "../common/windowState.js";
+import { disconnectDbusService } from "../dbus.js";
 import { init } from "../main.js";
 import { registerGlobalKeybinds } from "./globalKeybinds.js";
 import { registerIpc } from "./ipc.js";
@@ -160,17 +162,18 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
         app.on("second-instance", (_event, commandLine, _workingDirectory, additionalData) => {
             void (async () => {
                 // Print out data received from the second instance.
-                console.log(additionalData);
+                console.log(`data received: ${additionalData}`);
 
                 if (!getConfig("multiInstance")) {
-                    // Someone tried to run a second instance, we should focus our window.
-                    if (passedWindow) {
+                    // Someone tried to run a second instance,
+                    // we should focus our window if the user is not running special commands.
+                    if (passedWindow && !passedValidArgument(commandLine)) {
                         if (passedWindow.isMinimized()) passedWindow.restore();
                         passedWindow.show();
                         passedWindow.focus();
                     }
                     if (commandLine && commandLine.length > 0) {
-                        console.log(commandLine);
+                        handleCommands(commandLine);
                         const lastArg = commandLine.pop();
                         if (lastArg?.startsWith("discord://-")) {
                             navigateTo(passedWindow, lastArg.replace("discord://-", ""));
@@ -383,6 +386,7 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
     });
     app.on("before-quit", () => {
         stopRPC();
+        disconnectDbusService();
         try {
             // Ensure current window state is saved with display info
             if (passedWindow && !passedWindow.isDestroyed()) saveWindowState(passedWindow);
@@ -550,12 +554,7 @@ export function createWindow() {
     const mainWindow = new BrowserWindow(browserWindowOptions);
 
     // Restore by position + size directly to match saveWindowState roundtrip.
-    if (
-        storedBounds.x !== undefined &&
-        storedBounds.y !== undefined &&
-        storedBounds.width !== undefined &&
-        storedBounds.height !== undefined
-    ) {
+    if (storedBounds.x !== undefined && storedBounds.y !== undefined) {
         mainWindow.setPosition(storedBounds.x, storedBounds.y);
         mainWindow.setSize(storedBounds.width, storedBounds.height);
     }
