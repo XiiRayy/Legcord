@@ -87,6 +87,8 @@
 
 .sectionOpened {
     max-height: none;
+    /* Allow dropdown menus to paint outside the panel instead of being clipped. */
+    overflow: visible;
     margin: 16px;
     margin-top: 0;
     padding-top: 16px;
