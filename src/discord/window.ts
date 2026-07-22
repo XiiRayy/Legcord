@@ -527,7 +527,22 @@ export function createWindow() {
             }
             break;
         case "native":
-            browserWindowOptions.frame = true;
+            // On macOS, frame:true + transparent/vibrancy makes the native title bar
+            // and traffic lights invisible (Legcord#1095). Use overlay chrome instead.
+            if (os.platform() === "darwin" && getConfig("transparency") !== "none") {
+                browserWindowOptions.titleBarStyle = "hidden";
+                browserWindowOptions.titleBarOverlay = {
+                    color: getConfig("overlayButtonColor"),
+                    symbolColor: "#99aab5",
+                    height: 30,
+                };
+                browserWindowOptions.trafficLightPosition = {
+                    x: 10,
+                    y: 10,
+                };
+            } else {
+                browserWindowOptions.frame = true;
+            }
             break;
         case "overlay":
             browserWindowOptions.titleBarStyle = "hidden";
