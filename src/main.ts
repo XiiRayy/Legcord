@@ -18,6 +18,7 @@ import {
 } from "./common/config.js";
 import { getPreset } from "./common/flags.js";
 import { setLang } from "./common/lang.js";
+import { applyProxyCommandLineSwitches, applySessionProxy, configureNodeProxyEnv } from "./common/proxy.js";
 import { setupGlobalShortcuts, startDbusService } from "./dbus.js";
 
 // Chrome flags tracking
@@ -193,6 +194,8 @@ if (!app.requestSingleInstanceLock() && getConfig("multiInstance") === false) {
     app.commandLine.appendSwitch("enable-transparent-visuals");
     trackSwitch("enable-transparent-visuals");
     checkIfConfigIsBroken();
+    configureNodeProxyEnv();
+    applyProxyCommandLineSwitches();
     const preset = getPreset();
     if (preset) {
         preset.switches.forEach(([key, val]) => {
@@ -333,6 +336,7 @@ if (!app.requestSingleInstanceLock() && getConfig("multiInstance") === false) {
 
     void app.whenReady().then(async () => {
         if (isDev) console.log(JSON.stringify(getAppliedFlags()));
+        await applySessionProxy();
         process.on("SIGINT", () => app.quit());
         process.on("SIGTERM", () => app.quit());
         // Patch for linux bug to ensure things are loaded before window creation (fixes transparency on some linux systems)

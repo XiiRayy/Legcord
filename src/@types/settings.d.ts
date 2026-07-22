@@ -25,6 +25,9 @@ export interface AudioSettings {
     loopbackType: "loopback" | "loopbackWithMute";
 }
 
+/** Chromium/Electron proxy modes — mirrors browser proxy settings. */
+export type ProxyMode = "system" | "direct" | "fixed_servers" | "pac_script" | "auto_detect";
+
 export interface Settings {
     // Referenced for detecting a broken config.
     "0"?: string;
@@ -76,6 +79,14 @@ export interface Settings {
     quickCss: boolean;
     autoScroll: boolean;
     additionalArguments: string;
+    /** How Legcord resolves HTTP(S) proxies (Chromium + main-process fetch). */
+    proxyMode: ProxyMode;
+    /** Fixed proxy rules, e.g. `http://127.0.0.1:8080` or `socks5://host:1080`. */
+    proxyRules: string;
+    /** Hosts that bypass the proxy (comma-separated), e.g. `<local>,*.intranet.example`. */
+    proxyBypassRules: string;
+    /** PAC script URL when proxyMode is `pac_script`. */
+    proxyPacScript: string;
     noBundleUpdates: ValidMods[];
     automaticUpdates: boolean;
     overlayButtonColor: string;

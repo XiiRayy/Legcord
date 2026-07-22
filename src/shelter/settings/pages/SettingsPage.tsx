@@ -389,6 +389,47 @@ export function SettingsPage() {
                 />
             </Show>
             <Header class={classes.category} tag={HeaderTags.H5}>
+                {store.i18n["settings-category-networking"]}
+            </Header>
+            <DropdownItem
+                value={settings.proxyMode ?? "system"}
+                onChange={(v) => setConfig("proxyMode", v as Settings["proxyMode"], true)}
+                title={store.i18n["settings-proxyMode"]}
+                note={store.i18n["settings-proxyMode-desc"]}
+                link="https://www.electronjs.org/docs/latest/api/structures/proxy-config"
+                options={[
+                    { label: store.i18n["settings-proxyMode-system"], value: "system" },
+                    { label: store.i18n["settings-proxyMode-direct"], value: "direct" },
+                    { label: store.i18n["settings-proxyMode-fixed_servers"], value: "fixed_servers" },
+                    { label: store.i18n["settings-proxyMode-pac_script"], value: "pac_script" },
+                    { label: store.i18n["settings-proxyMode-auto_detect"], value: "auto_detect" },
+                ]}
+            />
+            <Show when={(settings.proxyMode ?? "system") === "fixed_servers"}>
+                <TextBoxItem
+                    title={store.i18n["settings-proxyRules"]}
+                    note={store.i18n["settings-proxyRules-desc"]}
+                    value={settings.proxyRules ?? ""}
+                    onInput={(v: string) => setConfig("proxyRules", v, true)}
+                />
+            </Show>
+            <Show when={(settings.proxyMode ?? "system") === "pac_script"}>
+                <TextBoxItem
+                    title={store.i18n["settings-proxyPacScript"]}
+                    note={store.i18n["settings-proxyPacScript-desc"]}
+                    value={settings.proxyPacScript ?? ""}
+                    onInput={(v: string) => setConfig("proxyPacScript", v, true)}
+                />
+            </Show>
+            <Show when={(settings.proxyMode ?? "system") !== "direct"}>
+                <TextBoxItem
+                    title={store.i18n["settings-proxyBypassRules"]}
+                    note={store.i18n["settings-proxyBypassRules-desc"]}
+                    value={settings.proxyBypassRules ?? "<local>"}
+                    onInput={(v: string) => setConfig("proxyBypassRules", v, true)}
+                />
+            </Show>
+            <Header class={classes.category} tag={HeaderTags.H5}>
                 {store.i18n["settings-category-debug"]}
             </Header>
             <SwitchItem
