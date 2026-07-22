@@ -21,3 +21,8 @@
     border: none;
     border-top: 1px solid var(--background-modifier-accent);
 }
+
+.importNote {
+    margin-top: 6px;
+    color: var(--text-muted, var(--text-subtle));
+}

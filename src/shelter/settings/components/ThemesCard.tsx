@@ -52,7 +52,7 @@ export const ThemesCard = (props: { theme: ThemeManifest }) => {
         <div class={classes.card}>
             <div class={classes.topRow}>
                 <div class={classes.info}>
-                    <Header tag={HeaderTags.H2} class={classes.title}>
+                    <Header tag={HeaderTags.HeadingLG} class={classes.title}>
                         {props.theme.name}
                     </Header>
                     <div class={classes.author}>
@@ -66,18 +66,23 @@ export const ThemesCard = (props: { theme: ThemeManifest }) => {
             </Show>
             <div class={classes.actions}>
                 <button
-                    title={store.i18n["themes-delete"]}
+                    use:tooltip={store.i18n["themes-delete"]}
                     type="button"
                     onClick={removeTheme}
                     class={`${classes.btn} ${classes.btnDanger}`}
                 >
                     <img class={classes.icon} alt={store.i18n["themes-delete"]} src="legcord://assets/Trash.png" />
                 </button>
-                <button title={store.i18n["themes-edit"]} type="button" onClick={editTheme} class={classes.btn}>
+                <button use:tooltip={store.i18n["themes-edit"]} type="button" onClick={editTheme} class={classes.btn}>
                     <img class={classes.icon} alt={store.i18n["themes-edit"]} src="legcord://assets/Edit.png" />
                 </button>
                 <Show when={showUpdate}>
-                    <button title={store.i18n["themes-update"]} type="button" onClick={updateTheme} class={classes.btn}>
+                    <button
+                        use:tooltip={store.i18n["themes-update"]}
+                        type="button"
+                        onClick={updateTheme}
+                        class={classes.btn}
+                    >
                         <img
                             class={classes.icon}
                             alt={store.i18n["themes-update"]}
@@ -85,7 +90,12 @@ export const ThemesCard = (props: { theme: ThemeManifest }) => {
                         />
                     </button>
                 </Show>
-                <button title={store.i18n["themes-open"]} type="button" onClick={openThemesFolder} class={classes.btn}>
+                <button
+                    use:tooltip={store.i18n["themes-open"]}
+                    type="button"
+                    onClick={openThemesFolder}
+                    class={classes.btn}
+                >
                     <img class={classes.icon} alt={store.i18n["themes-open"]} src="legcord://assets/Folder.png" />
                 </button>
             </div>
