@@ -328,7 +328,15 @@ export function SettingsPage() {
                         label: store.i18n["settings-prfmMode-performance"],
                         value: "performance",
                     },
+                    { label: store.i18n["settings-prfmMode-balanced"], value: "balanced" },
+                    { label: store.i18n["settings-prfmMode-latency"], value: "latency" },
+                    {
+                        label: store.i18n["settings-prfmMode-smoothScreenshare"],
+                        value: "smoothScreenshare",
+                    },
+                    { label: store.i18n["settings-prfmMode-voip"], value: "voip" },
                     { label: store.i18n["settings-prfmMode-battery"], value: "battery" },
+                    { label: store.i18n["settings-prfmMode-memory"], value: "memory" },
                     { label: store.i18n["settings-none"], value: "none" },
                 ]}
             />
