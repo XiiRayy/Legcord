@@ -43,7 +43,7 @@
         "@xmldom/xmldom": "^0.9.10",
         "app-builder-lib": "^26.8.1",
         "babel-preset-solid": "^1.9.12",
-        "electron": "43.1.1",
+        "electron": "43.2.0",
         "electron-builder": "26.8.1",
         "lucide-solid": "^1.16.0",
         "rolldown": "1.0.3",
