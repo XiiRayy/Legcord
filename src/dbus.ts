@@ -107,13 +107,13 @@ export async function setupGlobalShortcuts() {
     await registerAppId();
     console.debug(`Registered ${DBUS_INTERFACE_NAME} in freedesktop Registry.`);
 
-    function awaitResponse(requestPath: string): Promise<Record<string, any>> {
+    function awaitResponse(requestPath: string): Promise<Record<string, unknown>> {
         return bus.getProxyObject(FREEDESKTOP_PORTAL_NAME, requestPath).then(
             (requestObj) =>
-                new Promise<Record<string, any>>((resolve, reject) => {
+                new Promise<Record<string, unknown>>((resolve, reject) => {
                     const requestIface = requestObj.getInterface("org.freedesktop.portal.Request");
 
-                    requestIface.once("Response", (responseCode: number, results: Record<string, any>) => {
+                    requestIface.once("Response", (responseCode: number, results: Record<string, unknown>) => {
                         if (responseCode === 0) resolve(results);
                         else reject(new Error(`Request failed with code ${responseCode}`));
                     });
