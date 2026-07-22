@@ -298,5 +298,6 @@
     "games-removeFromBlacklist": "Eliminar",
     "games-application": "Aplicación",
     "settings-vaapi": "VAAPI",
-    "settings-vaapi-desc": "Utiliza VAAPI (aceleración por hardware) para la decodificación de vídeo en Linux. Esto reduce considerablemente el uso de la CPU durante el uso compartido de pantalla, pero puede causar problemas en algunos sistemas. Desactívalo si experimentas bloqueos o pantallas en negro durante el uso compartido de pantalla."
+    "settings-vaapi-desc": "Utiliza VAAPI (aceleración por hardware) para la decodificación de vídeo en Linux. Esto reduce considerablemente el uso de la CPU durante el uso compartido de pantalla, pero puede causar problemas en algunos sistemas. Desactívalo si experimentas bloqueos o pantallas en negro durante el uso compartido de pantalla.",
+    "settings-material": "Material de Ventana"
 }
