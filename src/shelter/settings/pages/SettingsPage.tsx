@@ -34,7 +34,6 @@ type PanelId = "backup" | "mods" | "lookAndFeel" | "behaviour" | "power" | "rpc"
 
 export function SettingsPage() {
     const [query, setQuery] = createSignal("");
-    const [openPanels, setOpenPanels] = createSignal<Partial<Record<PanelId, boolean>>>({});
 
     const settings = store.settings as Settings;
     const t = store.i18n;
@@ -160,10 +159,7 @@ export function SettingsPage() {
 
     const isSearching = createMemo(() => query().trim().length > 0);
 
-    const panelOpen = (id: PanelId) => {
-        if (isSearching()) return matchesSettingsQuery(panelKeywords[id], query());
-        return openPanels()[id] ?? false;
-    };
+    const panelForceOpen = (id: PanelId) => isSearching() && matchesSettingsQuery(panelKeywords[id], query());
 
     const panelHidden = (id: PanelId) => {
         if (!isSearching()) return false;
@@ -173,11 +169,6 @@ export function SettingsPage() {
     const anyPanelVisible = createMemo(() =>
         (Object.keys(panelKeywords) as PanelId[]).some((id) => matchesSettingsQuery(panelKeywords[id], query())),
     );
-
-    const onPanelOpenChange = (id: PanelId, open: boolean) => {
-        if (isSearching()) return;
-        setOpenPanels((prev) => ({ ...prev, [id]: open }));
-    };
 
     return (
         <SettingsSearchProvider query={query}>
@@ -197,9 +188,9 @@ export function SettingsPage() {
                 title={t["settings-category-backup"]}
                 description={t["settings-category-backup-desc"]}
                 icon={BackupPanelIcon}
-                open={panelOpen("backup")}
+                id="backup"
+                forceOpen={panelForceOpen("backup")}
                 hidden={panelHidden("backup")}
-                onOpenChange={(open) => onPanelOpenChange("backup", open)}
             >
                 <SearchableSetting keywords={panelKeywords.backup}>
                     <BackupSection embedded />
@@ -210,9 +201,9 @@ export function SettingsPage() {
                 title={t["settings-category-mods"]}
                 description={t["settings-category-mods-desc"]}
                 icon={ModsPanelIcon}
-                open={panelOpen("mods")}
+                id="mods"
+                forceOpen={panelForceOpen("mods")}
                 hidden={panelHidden("mods")}
-                onOpenChange={(open) => onPanelOpenChange("mods", open)}
             >
                 <SearchableSetting keywords={[t["settings-csp"], t["settings-csp-desc"], "CSP"]}>
                     <DropdownItem
@@ -263,9 +254,9 @@ export function SettingsPage() {
                 title={t["settings-category-lookAndFeel"]}
                 description={t["settings-category-lookAndFeel-desc"]}
                 icon={LookFeelPanelIcon}
-                open={panelOpen("lookAndFeel")}
+                id="lookAndFeel"
+                forceOpen={panelForceOpen("lookAndFeel")}
                 hidden={panelHidden("lookAndFeel")}
-                onOpenChange={(open) => onPanelOpenChange("lookAndFeel", open)}
             >
                 <SearchableSetting keywords={[t["settings-theme"], t["settings-theme-desc"], "window"]}>
                     <DropdownItem
@@ -414,9 +405,9 @@ export function SettingsPage() {
                 title={t["settings-category-behaviour"]}
                 description={t["settings-category-behaviour-desc"]}
                 icon={BehaviourPanelIcon}
-                open={panelOpen("behaviour")}
+                id="behaviour"
+                forceOpen={panelForceOpen("behaviour")}
                 hidden={panelHidden("behaviour")}
-                onOpenChange={(open) => onPanelOpenChange("behaviour", open)}
             >
                 <SearchableSetting keywords={[t["settings-channel"], t["settings-channel-desc"]]}>
                     <DropdownItem
@@ -532,9 +523,9 @@ export function SettingsPage() {
                 title={t["settings-category-powerManagement"]}
                 description={t["settings-category-powerManagement-desc"]}
                 icon={PowerPanelIcon}
-                open={panelOpen("power")}
+                id="power"
+                forceOpen={panelForceOpen("power")}
                 hidden={panelHidden("power")}
-                onOpenChange={(open) => onPanelOpenChange("power", open)}
             >
                 <SearchableSetting keywords={[t["settings-prfmMode"], t["settings-prfmMode-desc"], "performance"]}>
                     <DropdownItem
@@ -585,9 +576,9 @@ export function SettingsPage() {
                 title={t["settings-category-arrpc"]}
                 description={t["settings-category-arrpc-desc"]}
                 icon={RpcPanelIcon}
-                open={panelOpen("rpc")}
+                id="rpc"
+                forceOpen={panelForceOpen("rpc")}
                 hidden={panelHidden("rpc")}
-                onOpenChange={(open) => onPanelOpenChange("rpc", open)}
             >
                 <SearchableSetting
                     keywords={[t["settings-invitewebsocket"], t["settings-invitewebsocket-desc"], "arRPC"]}
@@ -638,9 +629,9 @@ export function SettingsPage() {
                 title={t["settings-category-networking"]}
                 description={t["settings-category-networking-desc"]}
                 icon={NetworkPanelIcon}
-                open={panelOpen("networking")}
+                id="networking"
+                forceOpen={panelForceOpen("networking")}
                 hidden={panelHidden("networking")}
-                onOpenChange={(open) => onPanelOpenChange("networking", open)}
             >
                 <SearchableSetting keywords={[t["settings-proxyMode"], t["settings-proxyMode-desc"], "proxy"]}>
                     <DropdownItem
@@ -694,9 +685,9 @@ export function SettingsPage() {
                 title={t["settings-category-advanced"]}
                 description={t["settings-category-advanced-desc"]}
                 icon={AdvancedPanelIcon}
-                open={panelOpen("advanced")}
+                id="advanced"
+                forceOpen={panelForceOpen("advanced")}
                 hidden={panelHidden("advanced")}
-                onOpenChange={(open) => onPanelOpenChange("advanced", open)}
             >
                 <SearchableSetting
                     keywords={[t["settings-showExperimentalPluginMenu"], t["settings-showExperimentalPluginMenu-desc"]]}

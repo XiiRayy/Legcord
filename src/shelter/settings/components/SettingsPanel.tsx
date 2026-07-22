@@ -6,14 +6,21 @@ const {
     ui: { Header, HeaderTags },
 } = shelter;
 
+/** Survives SettingsPanel / SettingsPage remounts (e.g. after toggling a setting). */
+const persistedOpen: Record<string, boolean> = {};
+
 export type SettingsPanelProps = {
+    /** Stable id used to remember open/closed across remounts. */
+    id: string;
     title: string;
     description?: string;
     icon: Component;
     children: JSX.Element;
-    /** Controlled open state (e.g. while searching). */
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
+    /**
+     * When true, the panel is forced open (search). Manual toggles are ignored
+     * until forceOpen is cleared — matching Shelter’s settings panels.
+     */
+    forceOpen?: boolean;
     defaultOpen?: boolean;
     /** Hide the panel entirely (e.g. no search matches). */
     hidden?: boolean;
@@ -38,38 +45,39 @@ const CaretIcon = (props: { open: boolean }) => (
 );
 
 export function SettingsPanel(props: SettingsPanelProps) {
-    const [internalOpen, setInternalOpen] = createSignal(props.defaultOpen ?? false);
+    const [internalOpen, setInternalOpen] = createSignal(persistedOpen[props.id] ?? props.defaultOpen ?? false);
 
-    const isControlled = () => props.open !== undefined;
-    const isOpen = () => (isControlled() ? Boolean(props.open) : internalOpen());
+    const isOpen = () => Boolean(props.forceOpen) || internalOpen();
 
     function toggle() {
-        const next = !isOpen();
-        if (!isControlled()) setInternalOpen(next);
-        props.onOpenChange?.(next);
+        if (props.forceOpen) return;
+        const next = !internalOpen();
+        persistedOpen[props.id] = next;
+        setInternalOpen(next);
     }
 
     return (
-        <Show when={!props.hidden}>
-            <div class={`${classes.container} ${isOpen() ? classes.containerOpened : ""}`}>
-                <button type="button" class={classes.header} onClick={toggle} aria-expanded={isOpen()}>
-                    <div class={classes.icon}>
-                        <props.icon />
-                    </div>
-                    <div class={classes.title}>
-                        <Header tag={HeaderTags.H5} class={classes.titleText}>
-                            {props.title}
-                        </Header>
-                        <Show when={props.description}>
-                            <div class={classes.description}>{props.description}</div>
-                        </Show>
-                    </div>
-                    <div class={classes.caret}>
-                        <CaretIcon open={isOpen()} />
-                    </div>
-                </button>
-                <div class={`${classes.section} ${isOpen() ? classes.sectionOpened : ""}`}>{props.children}</div>
-            </div>
-        </Show>
+        <div
+            class={`${classes.container} ${isOpen() ? classes.containerOpened : ""}`}
+            style={{ display: props.hidden ? "none" : undefined }}
+        >
+            <button type="button" class={classes.header} onClick={toggle} aria-expanded={isOpen()}>
+                <div class={classes.icon}>
+                    <props.icon />
+                </div>
+                <div class={classes.title}>
+                    <Header tag={HeaderTags.H5} class={classes.titleText}>
+                        {props.title}
+                    </Header>
+                    <Show when={props.description}>
+                        <div class={classes.description}>{props.description}</div>
+                    </Show>
+                </div>
+                <div class={classes.caret}>
+                    <CaretIcon open={isOpen()} />
+                </div>
+            </button>
+            <div class={`${classes.section} ${isOpen() ? classes.sectionOpened : ""}`}>{props.children}</div>
+        </div>
     );
 }
