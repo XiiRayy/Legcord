@@ -619,7 +619,7 @@ export function SettingsPage() {
                             title={t["settings-scanInterval"]}
                             note={t["settings-scanInterval-desc"]}
                             value={Number(settings.scanInterval).toString()}
-                            onInput={(v: string) => setConfig("scanInterval", Number(v))}
+                            onInput={(v: string) => setConfig("scanInterval", Number(v), true)}
                         />
                     </SearchableSetting>
                 </Show>
