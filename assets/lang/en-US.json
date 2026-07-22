@@ -147,6 +147,7 @@
     "settings-save": "Save Settings",
     "settings-experimental": "Experimental",
     "settings-restart": "Restart App",
+    "invite-goBackToApp": "Go back to the Discord app",
     "settings-updater": "Check for updates",
     "settings-skipSplash": "Skip Splash Screen",
     "settings-skipSplash-desc": "Skips Legcord splash screen when you start up the app.",
