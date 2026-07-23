@@ -17,6 +17,7 @@ store.fps ??= 30; // set default
 store.resolution ??= 1080; // 1080p is a safer default than 2K while OpenH264 is in use
 
 const BITRATE_CEILING = 25_000_000;
+const REAPPLY_DELAYS_MS = [1000, 3000, 8000] as const;
 
 /** Discord-like Go Live targets (bits/s) by height and fps band. */
 function targetBitrateFor(height: number, fps: number): number {
@@ -35,23 +36,51 @@ function targetBitrateFor(height: number, fps: number): number {
     return Math.min(highFps ? high : low, BITRATE_CEILING);
 }
 
-let loggedEncoderForCurrentStream = false;
-
-function getOutboundVideoSender(streamConnection: {
+type StreamConnection = {
     pc?: RTCPeerConnection;
     peerConnection?: RTCPeerConnection;
     _pc?: RTCPeerConnection;
-}): RTCRtpSender | undefined {
+    streamUserId?: string;
+    videoStreamParameters?: Array<{
+        maxFrameRate?: number;
+        maxResolution?: { type: string; width: number; height: number };
+        maxPixelCount?: number;
+        maxBitrate?: number;
+    }>;
+    videoQualityManager?: {
+        goliveMaxQuality?: {
+            bitrateMin?: number;
+            bitrateMax?: number;
+            bitrateTarget?: number;
+        };
+    };
+};
+
+let loggedEncoderForCurrentStream = false;
+let reapplyTimers: ReturnType<typeof setTimeout>[] = [];
+let reapplyGeneration = 0;
+
+function clearReapplyTimers(): void {
+    for (const t of reapplyTimers) clearTimeout(t);
+    reapplyTimers = [];
+    reapplyGeneration++;
+}
+
+function getLocalStreamConnection(): StreamConnection | undefined {
+    // @ts-expect-error Discord MediaEngine typings
+    const mediaConnections = [...MediaEngineStore.getMediaEngine().connections] as StreamConnection[];
+    // @ts-expect-error Discord UserStore typings
+    const currentUserId = UserStore.getCurrentUser().id as string;
+    return mediaConnections.find((connection) => connection.streamUserId === currentUserId);
+}
+
+function getOutboundVideoSender(streamConnection: StreamConnection): RTCRtpSender | undefined {
     const pc = streamConnection.pc ?? streamConnection.peerConnection ?? streamConnection._pc;
     return pc?.getSenders?.().find((s) => s.track?.kind === "video");
 }
 
 /** Prefer H.264 profiles that map to VideoToolbox HW encode (not OpenH264 CBP). */
-function preferMacVideoToolboxH264(streamConnection: {
-    pc?: RTCPeerConnection;
-    peerConnection?: RTCPeerConnection;
-    _pc?: RTCPeerConnection;
-}): void {
+function preferMacVideoToolboxH264(streamConnection: StreamConnection): void {
     if (window.legcord.platform !== "darwin") return;
     try {
         const sender = getOutboundVideoSender(streamConnection);
@@ -89,13 +118,14 @@ function preferMacVideoToolboxH264(streamConnection: {
     }
 }
 
+function formatMbps(bps: number | undefined | null): string {
+    if (bps == null || Number.isNaN(bps)) return "?";
+    return `${(bps / 1_000_000).toFixed(1)}Mbps`;
+}
+
 /** Cap RTP framerate / bitrate ceiling without forcing scale (Discord adapts spatial layers). */
 async function applySenderEncodeLimits(
-    streamConnection: {
-        pc?: RTCPeerConnection;
-        peerConnection?: RTCPeerConnection;
-        _pc?: RTCPeerConnection;
-    },
+    streamConnection: StreamConnection,
     _height: number,
     fps: number,
     maxBitrate: number,
@@ -109,37 +139,55 @@ async function applySenderEncodeLimits(
             params.encodings = [{}];
         }
 
+        const before = params.encodings.map((e) => e.maxBitrate);
         for (const encoding of params.encodings) {
-            // Only raise Chromium's default ~2.5Mbps ceiling — never fight adaptive downscales
+            // Raise whenever Discord/Chromium left a lower ceiling — never fight intentional
+            // downscales by forcing scaleResolutionDownBy.
             const current = encoding.maxBitrate;
-            if (current == null || current === 0 || (current >= 2_000_000 && current <= 2_500_000)) {
+            if (current == null || current < maxBitrate) {
                 encoding.maxBitrate = maxBitrate;
             }
             encoding.maxFramerate = fps;
-            // Do not set scaleResolutionDownBy — it fought Discord BWE and crushed quality to 320–640p
         }
 
         await sender.setParameters(params);
+        const after = sender.getParameters().encodings?.map((e) => e.maxBitrate) ?? [];
         log(
-            `Applied RTP sender limits: maxBitrate ceiling≈${(maxBitrate / 1_000_000).toFixed(1)}Mbps maxFramerate=${fps}`,
+            `Applied RTP sender limits: maxBitrate ${before.map(formatMbps).join(",")} → ${after.map(formatMbps).join(",")} (ceiling ${formatMbps(maxBitrate)}) maxFramerate=${fps}`,
         );
     } catch (e) {
         console.warn("[Screenshare] Failed to apply RTP sender encode limits:", e);
     }
 }
 
-async function logEncoderImplementation(streamConnection: {
-    pc?: RTCPeerConnection;
-    peerConnection?: RTCPeerConnection;
-    _pc?: RTCPeerConnection;
-}): Promise<void> {
+async function logEncoderImplementation(streamConnection: StreamConnection): Promise<void> {
     try {
         const sender = getOutboundVideoSender(streamConnection);
         if (!sender?.getStats) return;
 
         // Encoder stats appear shortly after the stream starts
         await new Promise((r) => setTimeout(r, 1500));
-        const stats = await sender.getStats();
+
+        // Connection may have been replaced; prefer a fresh local stream handle
+        const live = getLocalStreamConnection() ?? streamConnection;
+        const liveSender = getOutboundVideoSender(live) ?? sender;
+
+        const encodingParams = liveSender.getParameters?.().encodings?.[0];
+        const golive = live.videoQualityManager?.goliveMaxQuality;
+
+        const stats = await liveSender.getStats();
+        let availableOutgoingBitrate: number | undefined;
+        for (const report of stats.values()) {
+            if (report.type === "candidate-pair" && "availableOutgoingBitrate" in report) {
+                const nominated = "nominated" in report ? Boolean(report.nominated) : false;
+                const state = "state" in report ? String(report.state) : "";
+                if (nominated || state === "succeeded") {
+                    availableOutgoingBitrate = Number(report.availableOutgoingBitrate);
+                    if (nominated) break;
+                }
+            }
+        }
+
         for (const report of stats.values()) {
             if (report.type !== "outbound-rtp" || report.kind !== "video") continue;
             const impl = "encoderImplementation" in report ? String(report.encoderImplementation) : "unknown";
@@ -150,7 +198,26 @@ async function logEncoderImplementation(streamConnection: {
                     : "frameWidth" in report && "frameHeight" in report
                       ? `${report.frameWidth}x${report.frameHeight}`
                       : "";
-            log(`Screenshare encoder: implementation=${impl} codec=${mime} ${scale}`.trim());
+            const targetBitrate = "targetBitrate" in report ? Number(report.targetBitrate) : undefined;
+            const qualityLimitationReason =
+                "qualityLimitationReason" in report ? String(report.qualityLimitationReason) : "?";
+            const qualityLimitationDurations =
+                "qualityLimitationDurations" in report && report.qualityLimitationDurations
+                    ? JSON.stringify(report.qualityLimitationDurations)
+                    : "?";
+
+            log(
+                [
+                    `Screenshare encoder: implementation=${impl} codec=${mime} ${scale}`.trim(),
+                    `targetBitrate=${formatMbps(targetBitrate)}`,
+                    `availableOutgoingBitrate=${formatMbps(availableOutgoingBitrate)}`,
+                    `qualityLimitationReason=${qualityLimitationReason}`,
+                    `qualityLimitationDurations=${qualityLimitationDurations}`,
+                    `encoding.maxBitrate=${formatMbps(encodingParams?.maxBitrate)}`,
+                    `encoding.maxFramerate=${encodingParams?.maxFramerate ?? "?"}`,
+                    `goliveMaxQuality min/target/max=${formatMbps(golive?.bitrateMin)}/${formatMbps(golive?.bitrateTarget)}/${formatMbps(golive?.bitrateMax)}`,
+                ].join(" | "),
+            );
             return;
         }
         log("Screenshare encoder: no outbound-rtp video stats yet");
@@ -159,11 +226,9 @@ async function logEncoderImplementation(streamConnection: {
     }
 }
 
-function onStreamQualityChange() {
-    // @ts-expect-error fix types
-    const mediaConnections = [...MediaEngineStore.getMediaEngine().connections];
-    // @ts-expect-error fix types
-    const currentUserId = UserStore.getCurrentUser().id;
+function patchStreamQuality(reason: string): boolean {
+    const streamConnection = getLocalStreamConnection();
+    if (!streamConnection) return false;
 
     const width = Math.round(store.resolution * (16 / 9));
     const height = store.resolution;
@@ -171,28 +236,52 @@ function onStreamQualityChange() {
     const bitrateMin = Math.round(targetBitrate * 0.8);
     const bitrateMax = Math.min(Math.round(targetBitrate * 1.2), BITRATE_CEILING);
 
-    const streamConnection = mediaConnections.find((connection) => connection.streamUserId === currentUserId);
-    if (streamConnection) {
-        const params = streamConnection.videoStreamParameters[0];
+    const params = streamConnection.videoStreamParameters?.[0];
+    if (params) {
         params.maxFrameRate = store.fps;
         params.maxResolution = { type: "fixed", width, height };
         params.maxPixelCount = width * height;
         params.maxBitrate = bitrateMax;
+    }
 
-        streamConnection.videoQualityManager.goliveMaxQuality.bitrateMin = bitrateMin;
-        streamConnection.videoQualityManager.goliveMaxQuality.bitrateMax = bitrateMax;
-        streamConnection.videoQualityManager.goliveMaxQuality.bitrateTarget = targetBitrate;
+    const golive = streamConnection.videoQualityManager?.goliveMaxQuality;
+    if (golive) {
+        golive.bitrateMin = bitrateMin;
+        golive.bitrateMax = bitrateMax;
+        golive.bitrateTarget = targetBitrate;
+    }
 
-        void applySenderEncodeLimits(streamConnection, height, store.fps, bitrateMax);
-        preferMacVideoToolboxH264(streamConnection);
+    void applySenderEncodeLimits(streamConnection, height, store.fps, bitrateMax);
+    preferMacVideoToolboxH264(streamConnection);
 
-        log(
-            `Patched current user's stream with resolution: (${width}x${height}) ${store.fps}FPS @ ${(targetBitrate / 1_000_000).toFixed(1)}Mbps (min ${(bitrateMin / 1_000_000).toFixed(1)} / max ${(bitrateMax / 1_000_000).toFixed(1)}).`,
-        );
-        if (!loggedEncoderForCurrentStream) {
-            loggedEncoderForCurrentStream = true;
-            void logEncoderImplementation(streamConnection);
-        }
+    log(
+        `Patched current user's stream (${reason}) with resolution: (${width}x${height}) ${store.fps}FPS @ ${formatMbps(targetBitrate)} (min ${formatMbps(bitrateMin)} / max ${formatMbps(bitrateMax)}).`,
+    );
+    return true;
+}
+
+function scheduleStreamQualityReapplies(): void {
+    clearReapplyTimers();
+    const generation = reapplyGeneration;
+    for (const delay of REAPPLY_DELAYS_MS) {
+        const timer = setTimeout(() => {
+            if (generation !== reapplyGeneration) return;
+            if (!getLocalStreamConnection()) return;
+            patchStreamQuality(`reapply@${delay}ms`);
+        }, delay);
+        reapplyTimers.push(timer);
+    }
+}
+
+function onStreamQualityChange() {
+    if (!patchStreamQuality("quality-changed")) return;
+
+    scheduleStreamQualityReapplies();
+
+    if (!loggedEncoderForCurrentStream) {
+        loggedEncoderForCurrentStream = true;
+        const streamConnection = getLocalStreamConnection();
+        if (streamConnection) void logEncoderImplementation(streamConnection);
     }
 }
 
@@ -203,13 +292,14 @@ interface StreamDispatch {
 function onStreamEnd(dispatch: StreamDispatch) {
     if (!dispatch.streamKey) return;
     const owner = dispatch.streamKey.split(":").at(-1);
-    // @ts-expect-error fix types
-    const currentUserId = UserStore.getCurrentUser().id;
+    // @ts-expect-error Discord UserStore typings
+    const currentUserId = UserStore.getCurrentUser().id as string;
     if (dispatch.reason === "user_requested" && owner === currentUserId) {
         window.legcord.screenshare.venmicStop();
     }
     if (owner === currentUserId) {
         loggedEncoderForCurrentStream = false;
+        clearReapplyTimers();
     }
 }
 
@@ -248,6 +338,7 @@ export function onLoad() {
 }
 
 export function onUnload() {
+    clearReapplyTimers();
     dispatcher.unsubscribe("MEDIA_ENGINE_VIDEO_SOURCE_QUALITY_CHANGED", onStreamQualityChange);
     dispatcher.unsubscribe("STREAM_DELETE", onStreamEnd);
 }

@@ -39,7 +39,21 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     const bitrateScript = document.createElement("script");
     bitrateScript.textContent = `(function () {
     var CAP = "80000";
+    // Modest floor/start (kbps) so GCC probes above Discord's ~1–2.5 Mbps screenshare default
+    // without fighting congestion control. Max remains the hard ceiling.
+    var MIN_BR = "3000";
+    var START_BR = "3000";
     var isMac = ${process.platform === "darwin" ? "true" : "false"};
+    function setOrAppendFmtpParam(sdp, key, value) {
+        var re = new RegExp(key + "=\\\\d+", "g");
+        if (sdp.indexOf(key + "=") !== -1) {
+            return sdp.replace(re, key + "=" + value);
+        }
+        return sdp.replace(/(a=fmtp:\\d+ [^\\r\\n]*)/g, function (line) {
+            if (line.indexOf(key + "=") !== -1) return line;
+            return line + ";" + key + "=" + value;
+        });
+    }
     function mungeSdp(sdp) {
         if (!sdp || typeof sdp !== "string") return sdp;
         var out = sdp;
@@ -49,14 +63,9 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
         if (isMac) {
             out = out.replace(/profile-level-id=42e0([0-9a-fA-F]{2})/gi, "profile-level-id=4200$1");
         }
-        if (/x-google-max-bitrate=\\d+/.test(out)) {
-            out = out.replace(/x-google-max-bitrate=\\d+/g, "x-google-max-bitrate=" + CAP);
-        } else {
-            out = out.replace(/(a=fmtp:\\d+ [^\\r\\n]*)/g, function (line) {
-                if (line.indexOf("x-google-max-bitrate") !== -1) return line;
-                return line + ";x-google-max-bitrate=" + CAP;
-            });
-        }
+        out = setOrAppendFmtpParam(out, "x-google-max-bitrate", CAP);
+        out = setOrAppendFmtpParam(out, "x-google-min-bitrate", MIN_BR);
+        out = setOrAppendFmtpParam(out, "x-google-start-bitrate", START_BR);
         return out;
     }
     function wrapDescription(desc) {
