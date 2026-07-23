@@ -41,6 +41,49 @@ import { registerVenmicIpc } from "./venmic.js";
 export let mainWindows: BrowserWindow[] = [];
 export let inviteWindow: BrowserWindow;
 
+function hostnameMatches(hostname: string, domain: string): boolean {
+    const host = hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`);
+}
+
+/** True when the frame is a YouTube embed (or Discord Activities YouTube proxy) that should get AdGuard. */
+function shouldInjectAdguard(frameUrl: string): boolean {
+    try {
+        const url = new URL(frameUrl);
+        if (hostnameMatches(url.hostname, "youtube.com") && url.pathname.includes("/embed/")) {
+            return true;
+        }
+        // Discord Activities may proxy YouTube through *.discordsays.com (youtube.com appears in the path)
+        if (
+            hostnameMatches(url.hostname, "discordsays.com") &&
+            (url.pathname.includes("youtube.com") || url.search.includes("youtube.com"))
+        ) {
+            return true;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+function isBlockedRequestUrl(requestUrl: string): boolean {
+    try {
+        const url = new URL(requestUrl);
+        if (url.protocol !== "https:") return false;
+        if (/^\/api\/v\d+\/science(?:\/|$)/.test(url.pathname)) return true;
+        if (hostnameMatches(url.hostname, "sentry.io")) return true;
+        if (
+            url.hostname.toLowerCase().endsWith(".nel.cloudflare.com") ||
+            url.hostname.toLowerCase() === "nel.cloudflare.com"
+        ) {
+            return true;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
 function getStoredWindowBounds() {
     return sanitizeWindowBounds(
         {
@@ -199,10 +242,7 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
             return;
         }
         frame.once("dom-ready", async () => {
-            if (
-                frame.url.includes("youtube.com/embed/") ||
-                (frame.url.includes("discordsays") && frame.url.includes("youtube.com"))
-            ) {
+            if (shouldInjectAdguard(frame.url)) {
                 await frame.executeJavaScript(readFileSync(path.join(__dirname, "assets/js/adguard.js"), "utf-8"));
             }
         });
@@ -267,13 +307,8 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
 
     registerCustomHandler();
 
-    const blockedPatterns = [
-        /https:\/\/.*\/api\/v\d+\/science/,
-        /https:\/\/sentry\.io\/.*/,
-        /https:\/\/.*\.nel\.cloudflare\.com\/.*/,
-    ];
     passedWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-        if (blockedPatterns.some((pattern) => pattern.test(details.url))) {
+        if (isBlockedRequestUrl(details.url)) {
             return callback({ cancel: true });
         }
         if (
