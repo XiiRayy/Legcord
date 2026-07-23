@@ -6,20 +6,23 @@
 		<link rel="stylesheet" href="legcord://assets/css/editor.css">
 	</head>
 	<body>
-		<script type="text/javascript" src="legcord://assets/js/monacoLoader.js"></script>
+		<script type="text/javascript" src="./monaco/vs/loader.js"></script>
 		<div id="editorCode"></div>
 		<script>
 			const cssCode = cssEditor.get;
+			const monacoRoot = new URL("./monaco/", window.location.href).href;
+			const vs = new URL("./monaco/vs", window.location.href).href;
+
 			require.config({
-				paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor/min/vs" }
+				paths: { vs }
 			});
 
 			window.MonacoEnvironment = {
-			getWorkerUrl: (_workerId, _label) => `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-					self.MonacoEnvironment = {
-					baseUrl: 'https://cdn.jsdelivr.net/npm/monaco-editor/min/'
-					};
-					importScripts('https://cdn.jsdelivr.net/npm/monaco-editor/min/vs/base/worker/workerMain.js');`)}`
+				getWorkerUrl: () =>
+					`data:text/javascript;charset=utf-8,${encodeURIComponent(`
+						self.MonacoEnvironment = { baseUrl: ${JSON.stringify(monacoRoot)} };
+						importScripts(${JSON.stringify(`${vs}/base/worker/workerMain.js`)});
+					`)}`,
 			};
 
 			// Monaco init
@@ -49,8 +52,6 @@
 					cssEditor.set(editor.getValue());
 				});
 			}
-
-
 		</script>
 	</body>
 </html>
