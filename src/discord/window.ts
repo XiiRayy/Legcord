@@ -21,6 +21,13 @@ import { handleCommands, passedValidArgument } from "../common/handleCommands.js
 import { getLang } from "../common/lang.js";
 import { injectThemesMain } from "../common/themes.js";
 import {
+    isBlockedLocalhostWebSocket,
+    isDiscordIcsBlobUrl,
+    isDiscordPopoutUrl,
+    isTelemetryBlockedUrl,
+    isYouTubeEmbedOrProxyFrame,
+} from "../common/sanitization.js";
+import {
     DEFAULT_WINDOW_HEIGHT,
     DEFAULT_WINDOW_WIDTH,
     MIN_WINDOW_HEIGHT,
@@ -40,49 +47,6 @@ import { createTray, tray } from "./tray.js";
 import { registerVenmicIpc } from "./venmic.js";
 export let mainWindows: BrowserWindow[] = [];
 export let inviteWindow: BrowserWindow;
-
-function hostnameMatches(hostname: string, domain: string): boolean {
-    const host = hostname.toLowerCase();
-    return host === domain || host.endsWith(`.${domain}`);
-}
-
-/** True when the frame is a YouTube embed (or Discord Activities YouTube proxy) that should get AdGuard. */
-function shouldInjectAdguard(frameUrl: string): boolean {
-    try {
-        const url = new URL(frameUrl);
-        if (hostnameMatches(url.hostname, "youtube.com") && url.pathname.includes("/embed/")) {
-            return true;
-        }
-        // Discord Activities may proxy YouTube through *.discordsays.com (youtube.com appears in the path)
-        if (
-            hostnameMatches(url.hostname, "discordsays.com") &&
-            (url.pathname.includes("youtube.com") || url.search.includes("youtube.com"))
-        ) {
-            return true;
-        }
-        return false;
-    } catch {
-        return false;
-    }
-}
-
-function isBlockedRequestUrl(requestUrl: string): boolean {
-    try {
-        const url = new URL(requestUrl);
-        if (url.protocol !== "https:") return false;
-        if (/^\/api\/v\d+\/science(?:\/|$)/.test(url.pathname)) return true;
-        if (hostnameMatches(url.hostname, "sentry.io")) return true;
-        if (
-            url.hostname.toLowerCase().endsWith(".nel.cloudflare.com") ||
-            url.hostname.toLowerCase() === "nel.cloudflare.com"
-        ) {
-            return true;
-        }
-        return false;
-    } catch {
-        return false;
-    }
-}
 
 function getStoredWindowBounds() {
     return sanitizeWindowBounds(
@@ -242,7 +206,7 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
             return;
         }
         frame.once("dom-ready", async () => {
-            if (shouldInjectAdguard(frame.url)) {
+            if (isYouTubeEmbedOrProxyFrame(frame.url)) {
                 await frame.executeJavaScript(readFileSync(path.join(__dirname, "assets/js/adguard.js"), "utf-8"));
             }
         });
@@ -251,18 +215,14 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
         // Allow about:blank (used by Vencord & Equicord QuickCss popup)
         if (url === "about:blank") return { action: "allow" };
         // Saving ics files on future events
-        if (url.startsWith("blob:https://discord.com/")) {
+        if (isDiscordIcsBlobUrl(url)) {
             return {
                 action: "allow",
                 overrideBrowserWindowOptions: { show: false },
             };
         }
         // Allow Discord stream popout
-        if (
-            url === "https://discord.com/popout" ||
-            url === "https://canary.discord.com/popout" ||
-            url === "https://ptb.discord.com/popout"
-        )
+        if (isDiscordPopoutUrl(url))
             return {
                 action: "allow",
                 overrideBrowserWindowOptions: {
@@ -308,15 +268,7 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
     registerCustomHandler();
 
     passedWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-        if (isBlockedRequestUrl(details.url)) {
-            return callback({ cancel: true });
-        }
-        if (
-            details.url.includes("ws://127.0.0.1:") &&
-            !details.url.includes("127.0.0.1:1211") &&
-            !details.url.includes("127.0.0.1:1112") &&
-            !details.url.includes("127.0.0.1:6888")
-        ) {
+        if (isTelemetryBlockedUrl(details.url) || isBlockedLocalhostWebSocket(details.url)) {
             return callback({ cancel: true });
         }
         return callback({});
