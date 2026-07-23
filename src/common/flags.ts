@@ -154,12 +154,7 @@ const webrtcHwCommon: Preset = {
         ["enable-accelerated-video-decode"],
         ["enable-gpu-memory-buffer-video-frames"],
     ],
-    enableFeatures: [
-        "WebRtcHWDecoding",
-        "AcceleratedVideoDecoder",
-        "ZeroCopyDesktopCapture",
-        "CanvasOopRasterization",
-    ],
+    enableFeatures: ["WebRtcHWDecoding", "AcceleratedVideoDecoder", "ZeroCopyDesktopCapture", "CanvasOopRasterization"],
     disableFeatures: ["UseChromeOSDirectVideoDecoder"],
 };
 
@@ -282,7 +277,7 @@ function withoutLinuxHwEncode(preset: Preset): Preset {
 function applyPlatformVideoStack(base: Preset | undefined): Preset | undefined {
     if (!getConfig("hardwareAcceleration")) return base;
 
-    let preset = base ? mergePresets(base, webrtcHwCommon) : webrtcHwCommon;
+    const preset = base ? mergePresets(base, webrtcHwCommon) : webrtcHwCommon;
     console.log("WebRTC HW baseline enabled");
 
     switch (process.platform) {
