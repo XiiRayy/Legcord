@@ -19,7 +19,6 @@ import { navigateTo } from "../common/dom.js";
 import { forceQuit, setForceQuit } from "../common/forceQuit.js";
 import { handleCommands, passedValidArgument } from "../common/handleCommands.js";
 import { getLang } from "../common/lang.js";
-import { injectThemesMain } from "../common/themes.js";
 import {
     isBlockedLocalhostWebSocket,
     isDiscordIcsBlobUrl,
@@ -27,6 +26,7 @@ import {
     isTelemetryBlockedUrl,
     isYouTubeEmbedOrProxyFrame,
 } from "../common/sanitization.js";
+import { injectThemesMain } from "../common/themes.js";
 import {
     DEFAULT_WINDOW_HEIGHT,
     DEFAULT_WINDOW_WIDTH,

@@ -36,7 +36,7 @@ export function isYouTubeEmbedOrProxyFrame(frameUrl: string): boolean {
 /** Telemetry / noise hosts and Discord science endpoints we cancel in webRequest. */
 export function isTelemetryBlockedUrl(requestUrl: string): boolean {
     const url = tryParseUrl(requestUrl);
-    if (!url || url.protocol !== "https:") return false;
+    if (url?.protocol !== "https:") return false;
 
     if (/^\/api\/v\d+\/science(?:\/|$)/.test(url.pathname)) return true;
     if (hostnameMatches(url.hostname, "sentry.io")) return true;
@@ -51,7 +51,7 @@ export function isTelemetryBlockedUrl(requestUrl: string): boolean {
  */
 export function isDiscordIcsBlobUrl(urlString: string): boolean {
     const blobUrl = tryParseUrl(urlString);
-    if (!blobUrl || blobUrl.protocol !== "blob:") return false;
+    if (blobUrl?.protocol !== "blob:") return false;
 
     const inner = tryParseUrl(blobUrl.pathname);
     if (!inner || (inner.protocol !== "https:" && inner.protocol !== "http:")) return false;
@@ -62,7 +62,7 @@ export function isDiscordIcsBlobUrl(urlString: string): boolean {
 /** Discord stream popout windows (stable / canary / PTB). */
 export function isDiscordPopoutUrl(urlString: string): boolean {
     const url = tryParseUrl(urlString);
-    if (!url || url.protocol !== "https:" || url.pathname !== "/popout") return false;
+    if (url?.protocol !== "https:" || url.pathname !== "/popout") return false;
 
     const host = url.hostname.toLowerCase();
     return host === "discord.com" || host === "canary.discord.com" || host === "ptb.discord.com";
