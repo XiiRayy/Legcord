@@ -186,6 +186,15 @@ if (!app.requestSingleInstanceLock() && getConfig("multiInstance") === false) {
         enableFeatures.add("MacLoopbackAudioForScreenShare");
         enableFeatures.add("MacSckSystemAudioLoopbackOverride");
         enableFeatures.add("MacCatapSystemAudioLoopbackCapture");
+        // VideoToolbox path for WebRTC H.264 (Intel + Apple Silicon)
+        enableFeatures.add("MacosVideoToolbox");
+        enableFeatures.add("VideoToolboxVideoDecoder");
+        if (getConfig("hardwareAcceleration")) {
+            app.commandLine.appendSwitch("webrtc-hw-encoding");
+            trackSwitch("webrtc-hw-encoding");
+            app.commandLine.appendSwitch("webrtc-hw-decoding");
+            trackSwitch("webrtc-hw-decoding");
+        }
     }
     // work around chrome 66 disabling autoplay by default
     app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");

@@ -51,6 +51,8 @@ contextBridge.exposeInMainWorld("legcord", {
         openCustomIconDialog: () => ipcRenderer.send("openCustomIconDialog"),
         copyDebugInfo: () => ipcRenderer.send("copyDebugInfo"),
         copyGPUInfo: () => ipcRenderer.send("copyGPUInfo"),
+        openWebRTCInternals: () => ipcRenderer.send("openWebRTCInternals"),
+        openGPUInfo: () => ipcRenderer.send("openGPUInfo"),
         dumpFlags: () => ipcRenderer.sendSync("dumpFlags") as AppliedFlagsOutput,
     },
     touchbar: {

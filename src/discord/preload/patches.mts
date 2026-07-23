@@ -30,6 +30,95 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     }
 }
 
+// Raise Chromium's ~2500kbps screenshare SDP cap before Discord binds RTCPeerConnection.
+// Shelter plugins load too late / MediaEngine may keep the original method reference.
+// On macOS also rewrite H.264 Constrained Baseline → Baseline on local *and* remote SDP:
+// Discord's Go Live answer forces profile-level-id=42e01f (OpenH264); local-only munging
+// is overwritten by setRemoteDescription, so the answer must be rewritten too.
+{
+    const bitrateScript = document.createElement("script");
+    bitrateScript.textContent = `(function () {
+    var CAP = "80000";
+    var isMac = ${process.platform === "darwin" ? "true" : "false"};
+    function mungeSdp(sdp) {
+        if (!sdp || typeof sdp !== "string") return sdp;
+        var out = sdp;
+        // Chromium uses OpenH264 for Constrained Baseline (42e0xx). Rewrite to Baseline
+        // (4200xx) so VideoToolbox / platform HW H.264 can be selected on macOS.
+        // See discuss-webrtc: CBP uses software encoder for historical reasons.
+        if (isMac) {
+            out = out.replace(/profile-level-id=42e0([0-9a-fA-F]{2})/gi, "profile-level-id=4200$1");
+        }
+        if (/x-google-max-bitrate=\\d+/.test(out)) {
+            out = out.replace(/x-google-max-bitrate=\\d+/g, "x-google-max-bitrate=" + CAP);
+        } else {
+            out = out.replace(/(a=fmtp:\\d+ [^\\r\\n]*)/g, function (line) {
+                if (line.indexOf("x-google-max-bitrate") !== -1) return line;
+                return line + ";x-google-max-bitrate=" + CAP;
+            });
+        }
+        return out;
+    }
+    function wrapDescription(desc) {
+        if (!desc || !desc.sdp) return desc;
+        var sdp = mungeSdp(desc.sdp);
+        if (sdp === desc.sdp) return desc;
+        try {
+            return new RTCSessionDescription({ type: desc.type, sdp: sdp });
+        } catch (e) {
+            return Object.assign({}, desc, { sdp: sdp });
+        }
+    }
+    var proto = window.RTCPeerConnection && window.RTCPeerConnection.prototype;
+    if (!proto) return;
+    var origSLD = proto.setLocalDescription;
+    proto.setLocalDescription = function (desc) {
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length > 0) args[0] = wrapDescription(args[0]);
+        return origSLD.apply(this, args);
+    };
+    var origSRD = proto.setRemoteDescription;
+    proto.setRemoteDescription = function (desc) {
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length > 0) args[0] = wrapDescription(args[0]);
+        return origSRD.apply(this, args);
+    };
+    var origOffer = proto.createOffer;
+    proto.createOffer = function () {
+        var self = this;
+        var args = arguments;
+        return Promise.resolve(origOffer.apply(self, args)).then(function (offer) {
+            return wrapDescription(offer) || offer;
+        });
+    };
+    var origAnswer = proto.createAnswer;
+    if (origAnswer) {
+        proto.createAnswer = function () {
+            var self = this;
+            var args = arguments;
+            return Promise.resolve(origAnswer.apply(self, args)).then(function (answer) {
+                return wrapDescription(answer) || answer;
+            });
+        };
+    }
+    // Do NOT patch RTCRtpSender.setParameters to force high maxBitrate — that fights
+    // Discord/WebRTC congestion control and collapses streams to tiny resolutions.
+    console.log("[Legcord] Early WebRTC screenshare SDP patch installed" + (isMac ? " (macOS H264 CBP→Baseline on local+remote)" : ""));
+})();`;
+
+    if (document.documentElement) {
+        document.documentElement.prepend(bitrateScript);
+    } else {
+        const observer = new MutationObserver(() => {
+            if (document.documentElement) {
+                observer.disconnect();
+                document.documentElement.prepend(bitrateScript);
+            }
+        });
+        observer.observe(document, { childList: true });
+    }
+}
+
 // Fix: Chromium on macOS ignores video deviceId when passed as an "ideal" constraint
 // (plain string), always returning the first camera. Discord passes deviceId this way.
 // This patch promotes "ideal" to "exact", stops active tracks before switching so macOS
@@ -132,42 +221,9 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     }
 }
 
-export async function getVirtmic() {
-    try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioDevice = devices.find(({ label }) => label === "vencord-screen-share");
-        return audioDevice?.deviceId;
-    } catch (_error) {
-        return null;
-    }
-}
-
 async function load() {
     await sleep(5000).then(() => {
-        const original = navigator.mediaDevices.getDisplayMedia;
-        navigator.mediaDevices.getDisplayMedia = async function (opts) {
-            const stream = await original.call(this, opts);
-            const id = await getVirtmic();
-
-            if (id) {
-                const audio = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        deviceId: {
-                            exact: id,
-                        },
-                        autoGainControl: false,
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                    },
-                });
-                audio.getAudioTracks().forEach((t) => {
-                    stream.addTrack(t);
-                });
-            }
-
-            return stream;
-        };
-
+        // Venmic audio injection lives in the Shelter screenshare getDisplayMedia patch.
         // dirty hack to make clicking notifications focus Legcord
         addScript(`
         (() => {

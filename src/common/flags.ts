@@ -66,6 +66,7 @@ const voip: Preset = {
         ["enable-gpu-rasterization"],
         ["enable-zero-copy"],
         ["ignore-gpu-blocklist"],
+        ["enable-accelerated-video-decode"],
         ["force_high_performance_gpu"],
         ["disable-background-timer-throttling"],
         ["disable-renderer-backgrounding"],
@@ -107,11 +108,14 @@ const smoothExperiment: Preset = {
         ["enable-gpu-rasterization"],
         ["enable-zero-copy"],
         ["ignore-gpu-blocklist"],
+        ["enable-accelerated-video-decode"],
         ["disable-background-timer-throttling"],
         ["disable-renderer-backgrounding"],
         ["enable-hardware-overlays", "single-fullscreen,single-on-top,underlay"],
         ["force_high_performance_gpu"],
-        ["use-gl", "desktop"],
+        // Do NOT set use-gl=desktop here. On Electron 43+/macOS, Chromium only allows
+        // ANGLE (metal/opengl); use-gl=desktop fails GPU init and then disables all
+        // HW acceleration (including VideoToolbox encode) after repeated crashes.
     ],
     enableFeatures: [
         "EnableDrDc",
@@ -120,6 +124,8 @@ const smoothExperiment: Preset = {
         "ThrottleDisplayNoneAndVisibilityHiddenCrossOriginIframes",
         "UseSkiaRenderer",
         "WebAssemblyLazyCompilation",
+        "WebRtcHWEncoding",
+        "WebRtcHWDecoding",
         "AcceleratedVideoDecodeLinuxGL",
         "AcceleratedVideoEncoder",
         "AcceleratedVideoDecoder",
@@ -141,19 +147,76 @@ const battery: Preset = {
     disableFeatures: [],
 };
 
+/**
+ * Cross-platform WebRTC / screenshare HW encode baseline.
+ * Applied whenever hardwareAcceleration is on, including performanceMode "none".
+ */
+const webrtcHw: Preset = {
+    switches: [
+        ["ignore-gpu-blocklist"],
+        ["enable-zero-copy"],
+        ["enable-accelerated-video-decode"],
+        ["enable-gpu-memory-buffer-video-frames"],
+    ],
+    enableFeatures: [
+        "WebRtcHWEncoding",
+        "WebRtcHWDecoding",
+        "AcceleratedVideoEncoder",
+        "AcceleratedVideoDecoder",
+        "ZeroCopyDesktopCapture",
+        "CanvasOopRasterization",
+    ],
+    disableFeatures: ["UseChromeOSDirectVideoDecoder"],
+};
+
+/** macOS VideoToolbox HW encode/decode (Intel + Apple Silicon). */
+const macVideoToolbox: Preset = {
+    switches: [
+        ["ignore-gpu-blocklist"],
+        // After use-gl=desktop / other GPU init failures, Chromium may keep GPU disabled
+        // due to "frequent crashes" even once the bad flag is gone — clear that limit.
+        ["disable-gpu-process-crash-limit"],
+        ["enable-zero-copy"],
+        ["enable-accelerated-video-decode"],
+        // Legacy Chromium switches still honored by Electron's WebRTC stack
+        ["webrtc-hw-encoding"],
+        ["webrtc-hw-decoding"],
+        ["enable-gpu-memory-buffer-video-frames"],
+    ],
+    enableFeatures: [
+        "MacosVideoToolbox",
+        "VideoToolboxVideoDecoder",
+        "WebRtcHWEncoding",
+        "WebRtcHWDecoding",
+        "AcceleratedVideoEncoder",
+        "AcceleratedVideoDecoder",
+        "ZeroCopyDesktopCapture",
+        // Helps enumerate platform HW encoders used by WebRTC on Apple GPUs
+        "PlatformHEVCEncoderSupport",
+    ],
+    disableFeatures: [],
+};
+
+/** Linux VA-API encode/decode (teams-for-linux #1324 + modern Chromium names). */
 const vaapi: Preset = {
     switches: [
         ["ignore-gpu-blocklist"],
         ["enable-gpu-rasterization"],
         ["enable-zero-copy"],
+        ["enable-accelerated-video-decode"],
         ["force_high_performance_gpu"],
         ["use-gl", "desktop"],
     ],
     enableFeatures: [
-        "AcceleratedVideoDecodeLinuxGL",
+        "VaapiIgnoreDriverChecks",
         "AcceleratedVideoEncoder",
         "AcceleratedVideoDecoder",
+        "AcceleratedVideoDecodeLinuxGL",
         "AcceleratedVideoDecodeLinuxZeroCopyGL",
+        "WebRtcHWEncoding",
+        "WebRtcHWDecoding",
+        "ZeroCopyDesktopCapture",
+        "CanvasOopRasterization",
     ],
     disableFeatures: ["UseChromeOSDirectVideoDecoder"],
 };
@@ -308,6 +371,17 @@ export function getPreset(): Preset | undefined {
     if (getConfig("vaapi")) {
         console.log("VAAPI flags enabled");
         preset = preset ? mergePresets(preset, vaapi) : vaapi;
+    }
+
+    // Always enable WebRTC HW encode/decode when GPU acceleration is on (incl. performanceMode "none")
+    if (getConfig("hardwareAcceleration")) {
+        console.log("WebRTC HW encode/decode baseline enabled");
+        preset = preset ? mergePresets(preset, webrtcHw) : webrtcHw;
+
+        if (process.platform === "darwin") {
+            console.log("macOS VideoToolbox HW encode/decode flags enabled");
+            preset = mergePresets(preset, macVideoToolbox);
+        }
     }
 
     if (preset) {

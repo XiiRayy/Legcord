@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { Game } from "arrpc";
-import { app, type BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron";
 import isDev from "electron-is-dev";
 import type { Keybind } from "../@types/keybind.js";
 import type { Settings } from "../@types/settings.js";
@@ -70,6 +70,36 @@ function ifExistsRead(path: string): string | undefined {
 }
 
 let ipcRegistered = false;
+
+const chromeInternalsWindows = new Map<string, BrowserWindow>();
+
+function openChromeInternalsPage(url: "chrome://webrtc-internals/" | "chrome://gpu/", title: string): void {
+    const existing = chromeInternalsWindows.get(url);
+    if (existing && !existing.isDestroyed()) {
+        if (existing.isMinimized()) existing.restore();
+        existing.focus();
+        return;
+    }
+
+    const win = new BrowserWindow({
+        width: 1100,
+        height: 800,
+        minWidth: 640,
+        minHeight: 480,
+        title,
+        autoHideMenuBar: true,
+        webPreferences: {
+            sandbox: true,
+            nodeIntegration: false,
+            contextIsolation: true,
+        },
+    });
+    void win.loadURL(url);
+    chromeInternalsWindows.set(url, win);
+    win.on("closed", () => {
+        chromeInternalsWindows.delete(url);
+    });
+}
 
 export function registerIpc(passedWindow: BrowserWindow): void {
     if (ipcRegistered) return;
@@ -354,6 +384,12 @@ export function registerIpc(passedWindow: BrowserWindow): void {
     });
     ipcMain.on("copyGPUInfo", () => {
         clipboard.writeText(JSON.stringify(app.getGPUFeatureStatus()));
+    });
+    ipcMain.on("openWebRTCInternals", () => {
+        openChromeInternalsPage("chrome://webrtc-internals/", "WebRTC Internals");
+    });
+    ipcMain.on("openGPUInfo", () => {
+        openChromeInternalsPage("chrome://gpu/", "GPU");
     });
     ipcMain.on("openCustomIconDialog", () => {
         dialog

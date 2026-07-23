@@ -38,20 +38,45 @@ export async function patchNavigator(requestAudio = false) {
         const stream = await original.call(this, opts);
         const video = stream.getVideoTracks()[0];
 
-        const width = store.resolution * (16 / 9);
+        const width = Math.round(store.resolution * (16 / 9));
         const height = store.resolution;
 
+        // Prefer smoothness at 30+ FPS; detail/text trades FPS for sharpness (hurts Go Live badly).
+        const contentHint = store.fps >= 30 ? "motion" : "detail";
+
         const stream_constraints: MediaTrackConstraints = {
-            frameRate: store.fps,
-            width: width,
-            height: height,
+            frameRate: { ideal: store.fps, min: Math.min(15, store.fps) },
+            width: { min: 640, ideal: width, max: width },
+            height: { min: 480, ideal: height, max: height },
+            // @ts-expect-error non-standard but used by Chromium desktop capture
+            advanced: [{ width, height }],
+            // @ts-expect-error Chromium supports resizeMode on display tracks
+            resizeMode: "none",
         };
 
         if (video) {
+            try {
+                video.contentHint = contentHint;
+            } catch {
+                // contentHint is best-effort
+            }
+
             video
                 .applyConstraints(stream_constraints)
                 .then(() => {
-                    console.log(`Stream modified -> (${width}x${height}) ${store.fps}FPS`);
+                    const settings = video.getSettings();
+                    console.log(
+                        `Stream modified -> requested (${width}x${height}) ${store.fps}FPS hint=${contentHint}; actual (${settings.width ?? "?"}x${settings.height ?? "?"}) ${settings.frameRate ?? "?"}FPS`,
+                    );
+                    if (
+                        typeof settings.width === "number" &&
+                        typeof settings.height === "number" &&
+                        (settings.width > width * 1.25 || settings.height > height * 1.25)
+                    ) {
+                        console.warn(
+                            `[Screenshare] Capture is larger than requested (${settings.width}x${settings.height} vs ${width}x${height}); encode may still downscale in software.`,
+                        );
+                    }
                 })
                 .catch((error) => {
                     console.error("Failed to apply video constraints:", error);

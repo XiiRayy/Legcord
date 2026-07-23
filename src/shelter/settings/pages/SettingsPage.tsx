@@ -151,9 +151,12 @@ export function SettingsPage() {
             t["settings-storageFolder"],
             t["settings-copyDebugInfo"],
             t["settings-copyGPUInfo"],
+            t["settings-openWebRTCInternals"],
+            t["settings-openGPUInfo"],
             t["settings-clearClientModCache"],
             "venmic",
             "VAAPI",
+            "WebRTC",
         ],
     };
 
@@ -978,6 +981,16 @@ export function SettingsPage() {
                     <SearchableSetting keywords={[t["settings-copyGPUInfo"], "GPU"]}>
                         <Button size={ButtonSizes.MAX} onClick={window.legcord.settings.copyGPUInfo}>
                             {t["settings-copyGPUInfo"]}
+                        </Button>
+                    </SearchableSetting>
+                    <SearchableSetting keywords={[t["settings-openWebRTCInternals"], "WebRTC", "internals"]}>
+                        <Button size={ButtonSizes.MAX} onClick={window.legcord.settings.openWebRTCInternals}>
+                            {t["settings-openWebRTCInternals"]}
+                        </Button>
+                    </SearchableSetting>
+                    <SearchableSetting keywords={[t["settings-openGPUInfo"], "GPU", "chrome"]}>
+                        <Button size={ButtonSizes.MAX} onClick={window.legcord.settings.openGPUInfo}>
+                            {t["settings-openGPUInfo"]}
                         </Button>
                     </SearchableSetting>
                     <SearchableSetting keywords={[t["settings-clearClientModCache"], "cache"]}>

@@ -46,6 +46,8 @@ export interface LegcordWindow {
         openCustomIconDialog: () => void;
         copyDebugInfo: () => void;
         copyGPUInfo: () => void;
+        openWebRTCInternals: () => void;
+        openGPUInfo: () => void;
         setLang(lang: string): () => void;
         addKeybind: (keybind: Keybind) => void;
         toggleKeybind: (id: string) => void;
