@@ -160,8 +160,18 @@ const webrtcHwCommon: Preset = {
 
 /** Windows Media Foundation / Chromium HW encode path. */
 const winVideoEncode: Preset = {
-    switches: [],
-    enableFeatures: ["WebRtcHWEncoding", "AcceleratedVideoEncoder"],
+    switches: [
+        // Legacy Chromium switches still honored by Electron's WebRTC stack
+        ["webrtc-hw-encoding"],
+        ["webrtc-hw-decoding"],
+    ],
+    enableFeatures: [
+        "WebRtcHWEncoding",
+        "AcceleratedVideoEncoder",
+        // Off by default on Windows; without it CBP (Discord's 42e01f) stays on OpenH264.
+        // SDP munge prefers Baseline, but keep CBP HW as a fallback if negotiation reverts.
+        "PlatformH264CbpEncoding",
+    ],
     disableFeatures: [],
 };
 

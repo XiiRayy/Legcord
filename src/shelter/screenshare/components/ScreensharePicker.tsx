@@ -50,8 +50,10 @@ export async function patchNavigator(requestAudio = false) {
             height: { min: 480, ideal: height, max: height },
             // @ts-expect-error non-standard but used by Chromium desktop capture
             advanced: [{ width, height }],
+            // crop-and-scale so capture matches the picker resolution. "none" kept native
+            // panel size (e.g. 2304x1440) and forced software/HW encode of full desktop.
             // @ts-expect-error Chromium supports resizeMode on display tracks
-            resizeMode: "none",
+            resizeMode: "crop-and-scale",
         };
 
         if (video) {

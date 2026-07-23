@@ -32,9 +32,10 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
 
 // Raise Chromium's ~2500kbps screenshare SDP cap before Discord binds RTCPeerConnection.
 // Shelter plugins load too late / MediaEngine may keep the original method reference.
-// On macOS also rewrite H.264 Constrained Baseline → Baseline on local *and* remote SDP:
+// On macOS/Windows also rewrite H.264 Constrained Baseline → Baseline on local *and* remote SDP:
 // Discord's Go Live answer forces profile-level-id=42e01f (OpenH264); local-only munging
 // is overwritten by setRemoteDescription, so the answer must be rewritten too.
+// Without this, Windows burns CPU on OpenH264 even when Media Foundation HW encode is available.
 {
     const bitrateScript = document.createElement("script");
     bitrateScript.textContent = `(function () {
@@ -43,7 +44,8 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     // without fighting congestion control. Max remains the hard ceiling.
     var MIN_BR = "3000";
     var START_BR = "3000";
-    var isMac = ${process.platform === "darwin" ? "true" : "false"};
+    // VideoToolbox (macOS) and Media Foundation (Windows) HW encode avoid OpenH264 CBP.
+    var preferHwH264 = ${process.platform === "darwin" || process.platform === "win32" ? "true" : "false"};
     function setOrAppendFmtpParam(sdp, key, value) {
         var re = new RegExp(key + "=\\\\d+", "g");
         if (sdp.indexOf(key + "=") !== -1) {
@@ -58,9 +60,9 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
         if (!sdp || typeof sdp !== "string") return sdp;
         var out = sdp;
         // Chromium uses OpenH264 for Constrained Baseline (42e0xx). Rewrite to Baseline
-        // (4200xx) so VideoToolbox / platform HW H.264 can be selected on macOS.
+        // (4200xx) so VideoToolbox / Media Foundation HW H.264 can be selected.
         // See discuss-webrtc: CBP uses software encoder for historical reasons.
-        if (isMac) {
+        if (preferHwH264) {
             out = out.replace(/profile-level-id=42e0([0-9a-fA-F]{2})/gi, "profile-level-id=4200$1");
         }
         out = setOrAppendFmtpParam(out, "x-google-max-bitrate", CAP);
@@ -112,7 +114,7 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     }
     // Do NOT patch RTCRtpSender.setParameters to force high maxBitrate — that fights
     // Discord/WebRTC congestion control and collapses streams to tiny resolutions.
-    console.log("[Legcord] Early WebRTC screenshare SDP patch installed" + (isMac ? " (macOS H264 CBP→Baseline on local+remote)" : ""));
+    console.log("[Legcord] Early WebRTC screenshare SDP patch installed" + (preferHwH264 ? " (H264 CBP→Baseline on local+remote)" : ""));
 })();`;
 
     if (document.documentElement) {

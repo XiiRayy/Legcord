@@ -14,7 +14,7 @@ const {
 } = shelter;
 
 store.fps ??= 30; // set default
-store.resolution ??= 1080; // 1080p is a safer default than 2K while OpenH264 is in use
+store.resolution ??= 1080; // 1080p is a safer default than 2K on integrated GPUs
 
 const BITRATE_CEILING = 25_000_000;
 const REAPPLY_DELAYS_MS = [1000, 3000, 8000] as const;
@@ -79,9 +79,10 @@ function getOutboundVideoSender(streamConnection: StreamConnection): RTCRtpSende
     return pc?.getSenders?.().find((s) => s.track?.kind === "video");
 }
 
-/** Prefer H.264 profiles that map to VideoToolbox HW encode (not OpenH264 CBP). */
-function preferMacVideoToolboxH264(streamConnection: StreamConnection): void {
-    if (window.legcord.platform !== "darwin") return;
+/** Prefer H.264 profiles that map to platform HW encode (not OpenH264 CBP). */
+function preferPlatformHwH264(streamConnection: StreamConnection): void {
+    const platform = window.legcord.platform;
+    if (platform !== "darwin" && platform !== "win32") return;
     try {
         const sender = getOutboundVideoSender(streamConnection);
         if (!sender?.setCodecPreferences || typeof RTCRtpSender.getCapabilities !== "function") return;
@@ -99,22 +100,24 @@ function preferMacVideoToolboxH264(streamConnection: StreamConnection): void {
             }
             // Avoid Constrained Baseline → OpenH264 software path
             if (/profile-level-id=42e0/.test(fmtp)) return 5;
-            if (/profile-level-id=4200/.test(fmtp)) return 0; // Baseline → VideoToolbox
-            if (/profile-level-id=4d00/.test(fmtp)) return 1; // Main
-            if (/profile-level-id=6400/.test(fmtp)) return 2; // High
+            // Baseline / Main / High → VideoToolbox (macOS) or Media Foundation (Windows)
+            if (/profile-level-id=4200/.test(fmtp)) return 0;
+            if (/profile-level-id=4d00/.test(fmtp)) return 1;
+            if (/profile-level-id=6400/.test(fmtp)) return 2;
             return 3;
         };
 
         const preferred = [...caps.codecs].sort((a, b) => rank(a) - rank(b));
         sender.setCodecPreferences(preferred);
+        const backend = platform === "darwin" ? "VideoToolbox" : "MediaFoundation";
         log(
-            `Preferred macOS VideoToolbox H264 codecs: ${preferred
+            `Preferred ${backend} H264 codecs: ${preferred
                 .slice(0, 6)
                 .map((c) => `${c.mimeType}${c.sdpFmtpLine ? ` (${c.sdpFmtpLine})` : ""}`)
                 .join(", ")}`,
         );
     } catch (e) {
-        console.warn("[Screenshare] Failed to prefer VideoToolbox H264:", e);
+        console.warn("[Screenshare] Failed to prefer platform HW H264:", e);
     }
 }
 
@@ -252,7 +255,7 @@ function patchStreamQuality(reason: string): boolean {
     }
 
     void applySenderEncodeLimits(streamConnection, height, store.fps, bitrateMax);
-    preferMacVideoToolboxH264(streamConnection);
+    preferPlatformHwH264(streamConnection);
 
     log(
         `Patched current user's stream (${reason}) with resolution: (${width}x${height}) ${store.fps}FPS @ ${formatMbps(targetBitrate)} (min ${formatMbps(bitrateMin)} / max ${formatMbps(bitrateMax)}).`,
