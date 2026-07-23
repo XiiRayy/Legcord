@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { app, powerMonitor } from "electron";
 import isDev from "electron-is-dev";
@@ -60,7 +60,7 @@ const memory: Preset = {
     disableFeatures: [],
 };
 
-/** Favor voice/video call quality with HW WebRTC encode/decode. */
+/** Favor voice/video call quality. Platform-specific HW encode is layered on later. */
 const voip: Preset = {
     switches: [
         ["enable-gpu-rasterization"],
@@ -78,8 +78,6 @@ const voip: Preset = {
         "WebRtcHWEncoding",
         "AcceleratedVideoDecoder",
         "AcceleratedVideoEncoder",
-        "AcceleratedVideoDecodeLinuxGL",
-        "AcceleratedVideoDecodeLinuxZeroCopyGL",
         "ZeroCopyDesktopCapture",
     ],
     disableFeatures: ["UseChromeOSDirectVideoDecoder"],
@@ -126,10 +124,8 @@ const smoothExperiment: Preset = {
         "WebAssemblyLazyCompilation",
         "WebRtcHWEncoding",
         "WebRtcHWDecoding",
-        "AcceleratedVideoDecodeLinuxGL",
         "AcceleratedVideoEncoder",
         "AcceleratedVideoDecoder",
-        "AcceleratedVideoDecodeLinuxZeroCopyGL",
         "ZeroCopyDesktopCapture",
     ],
     disableFeatures: ["Vulkan", "UseChromeOSDirectVideoDecoder"],
@@ -148,10 +144,10 @@ const battery: Preset = {
 };
 
 /**
- * Cross-platform WebRTC / screenshare HW encode baseline.
- * Applied whenever hardwareAcceleration is on, including performanceMode "none".
+ * Shared WebRTC / screenshare baseline (no platform encode backend).
+ * Encode is added by macVideoToolbox / winVideoEncode / linux vaapi|software.
  */
-const webrtcHw: Preset = {
+const webrtcHwCommon: Preset = {
     switches: [
         ["ignore-gpu-blocklist"],
         ["enable-zero-copy"],
@@ -159,14 +155,30 @@ const webrtcHw: Preset = {
         ["enable-gpu-memory-buffer-video-frames"],
     ],
     enableFeatures: [
-        "WebRtcHWEncoding",
         "WebRtcHWDecoding",
-        "AcceleratedVideoEncoder",
         "AcceleratedVideoDecoder",
         "ZeroCopyDesktopCapture",
         "CanvasOopRasterization",
     ],
     disableFeatures: ["UseChromeOSDirectVideoDecoder"],
+};
+
+/** Windows Media Foundation / Chromium HW encode path. */
+const winVideoEncode: Preset = {
+    switches: [],
+    enableFeatures: ["WebRtcHWEncoding", "AcceleratedVideoEncoder"],
+    disableFeatures: [],
+};
+
+/**
+ * Linux: force software OpenH264 encode when VAAPI is off.
+ * AMD VCE via VaapiVideoEncodeAccelerator can freeze Discord screenshare for viewers
+ * even when chrome://gpu lists encode profiles.
+ */
+const linuxSoftwareVideoEncode: Preset = {
+    switches: [],
+    enableFeatures: [],
+    disableFeatures: ["AcceleratedVideoEncoder", "VaapiVideoEncoder", "WebRtcHWEncoding"],
 };
 
 /** macOS VideoToolbox HW encode/decode (Intel + Apple Silicon). */
@@ -197,18 +209,25 @@ const macVideoToolbox: Preset = {
     disableFeatures: [],
 };
 
-/** Linux VA-API encode/decode (teams-for-linux #1324 + modern Chromium names). */
-const vaapi: Preset = {
+/** Linux VA-API encode/decode (only applied when vaapi setting is on). */
+const linuxVaapi: Preset = {
     switches: [
         ["ignore-gpu-blocklist"],
+        ["disable-gpu-process-crash-limit"],
         ["enable-gpu-rasterization"],
         ["enable-zero-copy"],
         ["enable-accelerated-video-decode"],
         ["force_high_performance_gpu"],
-        ["use-gl", "desktop"],
+        // ANGLE+OpenGL required for AcceleratedVideoDecodeLinuxGL on Wayland.
+        // Do NOT use use-gl=desktop (removed in Electron 43+ / breaks GPU init).
+        ["use-gl", "angle"],
+        ["use-angle", "gl"],
+        ["enable-gpu-memory-buffer-video-frames"],
     ],
     enableFeatures: [
         "VaapiIgnoreDriverChecks",
+        "VaapiVideoDecoder",
+        "VaapiVideoEncoder",
         "AcceleratedVideoEncoder",
         "AcceleratedVideoDecoder",
         "AcceleratedVideoDecodeLinuxGL",
@@ -218,8 +237,74 @@ const vaapi: Preset = {
         "ZeroCopyDesktopCapture",
         "CanvasOopRasterization",
     ],
-    disableFeatures: ["UseChromeOSDirectVideoDecoder"],
+    // Vulkan is incompatible with ozone wayland and breaks VAAPI GL interop.
+    disableFeatures: ["UseChromeOSDirectVideoDecoder", "Vulkan"],
 };
+
+/**
+ * Fedora/RPM Fusion ships H.264/HEVC VA-API in dri-freeworld (patent-encumbered), while
+ * stock /usr/lib64/dri only exposes MPEG2/JPEG. Prefer freeworld so chrome://gpu lists
+ * real encode/decode profiles instead of an empty Video Acceleration Information block.
+ */
+export function configureLinuxVaapiEnvironment(): void {
+    if (process.platform !== "linux") return;
+
+    const candidates = [
+        "/usr/lib64/dri-freeworld",
+        "/usr/lib64/dri-nonfree",
+        "/usr/lib/dri-freeworld",
+        "/usr/lib/dri-nonfree",
+    ];
+    const preferred = candidates.filter((dir) => existsSync(dir));
+    if (preferred.length === 0) return;
+
+    const stock = ["/usr/lib64/dri", "/usr/lib/dri"].filter((dir) => existsSync(dir));
+    const parts = [...preferred, ...stock];
+    const existing = process.env.LIBVA_DRIVERS_PATH;
+    process.env.LIBVA_DRIVERS_PATH = existing ? `${parts.join(":")}:${existing}` : parts.join(":");
+    console.log(`VAAPI: using LIBVA_DRIVERS_PATH=${process.env.LIBVA_DRIVERS_PATH}`);
+}
+
+/** Strip Linux encode features that shared presets may have enabled. */
+function withoutLinuxHwEncode(preset: Preset): Preset {
+    const block = new Set(["AcceleratedVideoEncoder", "VaapiVideoEncoder", "WebRtcHWEncoding"]);
+    return {
+        switches: preset.switches,
+        enableFeatures: preset.enableFeatures.filter((f) => !block.has(f)),
+        disableFeatures: [...new Set([...preset.disableFeatures, ...block])],
+    };
+}
+
+/**
+ * Apply the platform-tested WebRTC / screenshare encode+decode stack.
+ * macOS → VideoToolbox; Windows → Chromium HW encode; Linux → VAAPI toggle.
+ */
+function applyPlatformVideoStack(base: Preset | undefined): Preset | undefined {
+    if (!getConfig("hardwareAcceleration")) return base;
+
+    let preset = base ? mergePresets(base, webrtcHwCommon) : webrtcHwCommon;
+    console.log("WebRTC HW baseline enabled");
+
+    switch (process.platform) {
+        case "darwin":
+            console.log("macOS VideoToolbox HW encode/decode flags enabled");
+            return mergePresets(preset, macVideoToolbox);
+        case "win32":
+            console.log("Windows HW video encode flags enabled");
+            return mergePresets(preset, winVideoEncode);
+        case "linux":
+            if (getConfig("vaapi")) {
+                console.log("Linux VAAPI HW encode/decode flags enabled");
+                configureLinuxVaapiEnvironment();
+                return mergePresets(preset, linuxVaapi);
+            }
+            console.log("Linux VAAPI off — forcing software WebRTC video encode");
+            return withoutLinuxHwEncode(mergePresets(preset, linuxSoftwareVideoEncode));
+        default:
+            // Other Unix-likes: keep decode baseline; enable generic HW encode.
+            return mergePresets(preset, winVideoEncode);
+    }
+}
 
 /**
  * Load custom flags from JSON file in user data directory (cached after first load)
@@ -368,21 +453,10 @@ export function getPreset(): Preset | undefined {
             console.log("No performance modes set");
     }
 
-    if (getConfig("vaapi")) {
-        console.log("VAAPI flags enabled");
-        preset = preset ? mergePresets(preset, vaapi) : vaapi;
-    }
-
-    // Always enable WebRTC HW encode/decode when GPU acceleration is on (incl. performanceMode "none")
-    if (getConfig("hardwareAcceleration")) {
-        console.log("WebRTC HW encode/decode baseline enabled");
-        preset = preset ? mergePresets(preset, webrtcHw) : webrtcHw;
-
-        if (process.platform === "darwin") {
-            console.log("macOS VideoToolbox HW encode/decode flags enabled");
-            preset = mergePresets(preset, macVideoToolbox);
-        }
-    }
+    // Platform-specific video encode/decode (macOS VideoToolbox / Win HW / Linux VAAPI).
+    // Shared voip/smoothScreenshare presets must not carry Linux-only or cross-platform
+    // encode flags that would undermine the macOS stack we just fixed.
+    preset = applyPlatformVideoStack(preset);
 
     if (preset) {
         return mergeWithCustomFlags(preset);

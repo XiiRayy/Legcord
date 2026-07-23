@@ -91,7 +91,7 @@
     "settings-spellcheck": "Spellcheck",
     "settings-spellcheck-desc": "Helps you correct misspelled words by highlighting them.",
     "settings-vaapi": "VAAPI",
-    "settings-vaapi-desc": "Use VAAPI for hardware video encode and decode on Linux (sharer and viewer). Enables driver-check bypass and WebRTC HW encode paths that greatly reduce CPU during screenshare. May cause crashes or black screens on some GPUs — disable if that happens.",
+    "settings-vaapi-desc": "Use VAAPI for hardware video encode and decode on Linux (sharer and viewer). Greatly reduces CPU during screenshare, but some GPUs (notably older AMD) produce frozen or blocky streams for viewers — disable to force software OpenH264 encode if that happens.",
     "settings-channel": "Discord channel",
     "settings-channel-desc": "Use this setting to change current instance of Discord that Legcord is running.",
     "settings-bitrateMin": "Minimum bitrate",
