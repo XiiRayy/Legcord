@@ -36,7 +36,11 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
 // Discord's Go Live answer forces profile-level-id=42e01f (OpenH264); local-only munging
 // is overwritten by setRemoteDescription, so the answer must be rewritten too.
 // Without this, Windows burns CPU on OpenH264 even when Media Foundation HW encode is available.
+// Gated by settings.sdpH264BaselineRewrite (default on) so users can disable if negotiation breaks.
 {
+    const rewriteBaselineSetting = ipcRenderer.sendSync("getConfig", "sdpH264BaselineRewrite") as boolean | undefined;
+    const preferHwH264 =
+        (process.platform === "darwin" || process.platform === "win32") && (rewriteBaselineSetting ?? true);
     const bitrateScript = document.createElement("script");
     bitrateScript.textContent = `(function () {
     var CAP = "80000";
@@ -45,7 +49,7 @@ const version = ipcRenderer.sendSync("displayVersion") as string;
     var MIN_BR = "3000";
     var START_BR = "3000";
     // VideoToolbox (macOS) and Media Foundation (Windows) HW encode avoid OpenH264 CBP.
-    var preferHwH264 = ${process.platform === "darwin" || process.platform === "win32" ? "true" : "false"};
+    var preferHwH264 = ${preferHwH264 ? "true" : "false"};
     function setOrAppendFmtpParam(sdp, key, value) {
         var re = new RegExp(key + "=\\\\d+", "g");
         if (sdp.indexOf(key + "=") !== -1) {

@@ -78,6 +78,8 @@
     "settings-automaticClientUpdates-desc": "Disables automatic Legcord updates",
     "settings-hardwareAcceleration": "Hardware acceleration",
     "settings-hardwareAcceleration-desc": "Hardware acceleration uses your GPU to make Legcord run faster. If you're experiencing visual glitches, try disabling this.",
+    "settings-sdpH264BaselineRewrite": "H.264 Baseline SDP rewrite",
+    "settings-sdpH264BaselineRewrite-desc": "Rewrites Discord's Constrained Baseline H.264 profile in WebRTC SDP so screenshare can use hardware encode (VideoToolbox / Media Foundation) instead of OpenH264. Disable if Go Live fails to connect or video is broken, then restart Legcord.",
     "settings-processScanning": "Process scanning",
     "settings-processScanning-desc": "Scan for running games to improve Rich Presence detection. Disable to reduce CPU usage. Requires a restart.",
     "settings-windowsLegacyScanning": "Windows legacy scanning",

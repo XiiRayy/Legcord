@@ -142,6 +142,7 @@ export function SettingsPage() {
             t["settings-venmic-workaround"],
             t["settings-audio"],
             t["settings-hardwareAcceleration"],
+            t["settings-sdpH264BaselineRewrite"],
             t["settings-vaapi"],
             t["settings-automaticClientUpdates"],
             t["settings-disableHttpCache"],
@@ -856,6 +857,26 @@ export function SettingsPage() {
                         {t["settings-hardwareAcceleration"]}
                     </SwitchItem>
                 </SearchableSetting>
+                <Show when={window.legcord.platform === "darwin" || window.legcord.platform === "win32"}>
+                    <SearchableSetting
+                        keywords={[
+                            t["settings-sdpH264BaselineRewrite"],
+                            t["settings-sdpH264BaselineRewrite-desc"],
+                            "H264",
+                            "SDP",
+                            "VideoToolbox",
+                            "OpenH264",
+                        ]}
+                    >
+                        <SwitchItem
+                            note={t["settings-sdpH264BaselineRewrite-desc"]}
+                            value={settings.sdpH264BaselineRewrite ?? true}
+                            onChange={(e: boolean) => setConfig("sdpH264BaselineRewrite", e, true)}
+                        >
+                            {t["settings-sdpH264BaselineRewrite"]}
+                        </SwitchItem>
+                    </SearchableSetting>
+                </Show>
                 <Show when={window.legcord.platform === "linux"}>
                     <SearchableSetting keywords={[t["settings-vaapi"], t["settings-vaapi-desc"], "VAAPI"]}>
                         <SwitchItem

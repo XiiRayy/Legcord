@@ -61,6 +61,8 @@ export interface Settings {
     startMinimized: boolean;
     keybinds: Keybind[];
     hardwareAcceleration: boolean;
+    /** Rewrite H.264 Constrained Baseline (42e0) → Baseline (4200) in WebRTC SDP for HW encode. */
+    sdpH264BaselineRewrite: boolean;
     useMacSystemPicker: boolean;
     inviteWebsocket: boolean;
     disableAutogain: boolean;
