@@ -15,17 +15,7 @@ contextBridge.exposeInMainWorld("setup", {
 
 if (ipcRenderer.sendSync("setup-getOS") !== "darwin") {
     document.addEventListener("DOMContentLoaded", () => {
-        const css = document.createElement("style");
-        css.innerHTML = `.bg { 
-            background-image: url("legcord://assets/mockup.jpg"); 
-            background-repeat: round;
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            outline: 80px solid black;
-            -webkit-filter: blur(10px); 
-        }`;
-        document.head.appendChild(css);
+        document.body.classList.add("has-setup-bg");
     });
 }
 

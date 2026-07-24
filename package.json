@@ -40,6 +40,7 @@
         "@types/ws": "^8.18.1",
         "@uwu/lune": "^1.6.2",
         "@uwu/shelter-defs": "^1.5.1",
+        "@uwu/shelter-ui": "^0.0.6",
         "@xmldom/xmldom": "^0.9.10",
         "app-builder-lib": "^26.8.1",
         "babel-preset-solid": "^1.9.12",

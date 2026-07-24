@@ -12,8 +12,8 @@ export async function createSetupWindow(): Promise<void> {
     if (platform() !== "darwin") import("./tray.js");
     return new Promise(() => {
         const windowOptions: BrowserWindowConstructorOptions = {
-            width: 800,
-            height: 600,
+            width: 840,
+            height: 720,
             title: getLang("setup-windowTitle"),
             darkTheme: true,
             icon: getConfig("customIcon") ?? path.join(import.meta.dirname, "../", "/assets/desktop.png"),

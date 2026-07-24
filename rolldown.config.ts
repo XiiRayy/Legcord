@@ -31,6 +31,8 @@ export default defineConfig([
                 targets: [
                     { src: "src/**/**/*.html", dest: "ts-out/html/" },
                     { src: "src/**/**/*.css", dest: "ts-out/css/" },
+                    { src: "src/setup/setup.css", dest: "ts-out/html/" },
+                    { src: "node_modules/@uwu/shelter-ui/compat.css", dest: "ts-out/html/" },
                     { src: "src/**/**/*.js", dest: "ts-out/js/" },
                     { src: "package.json", dest: "ts-out/" },
                     { src: "assets/**/**", dest: "ts-out/assets/" },

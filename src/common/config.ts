@@ -12,7 +12,7 @@ let configCache: Settings | null = null;
 let configCacheTime = 0;
 const CONFIG_CACHE_TTL = 5000; // Cache for 5 seconds
 const defaults: Settings = {
-    windowStyle: "default",
+    windowStyle: "overlay",
     channel: "stable",
     bounceOnPing: false,
     csp: "none",
@@ -34,7 +34,7 @@ const defaults: Settings = {
         loopbackType: "loopback",
     },
     multiInstance: false,
-    mods: ["vencord"],
+    mods: [],
     transparency: "none",
     windowMaterial: "mica",
     spellcheck: true,

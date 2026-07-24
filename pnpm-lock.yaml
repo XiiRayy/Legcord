@@ -66,6 +66,9 @@ importers:
       '@uwu/shelter-defs':
         specifier: ^1.5.1
         version: 1.5.1
+      '@uwu/shelter-ui':
+        specifier: ^0.0.6
+        version: 0.0.6(solid-js@1.9.14)
       '@xmldom/xmldom':
         specifier: ^0.9.10
         version: 0.9.10
@@ -1072,6 +1075,11 @@ packages:
 
   '@uwu/shelter-defs@1.5.1':
     resolution: {integrity: sha512-bO3M5SgqEpuNZkjd/LZFtTNNATpmVle5uznVp0QNgi3o1w2ej/ieYmwFK6nBZqnZHd8/4aJN1Njl/JbTnZcY5A==}
+
+  '@uwu/shelter-ui@0.0.6':
+    resolution: {integrity: sha512-b9NsUC7A+n4jZJl8TmXv+UKPAtfS9JygtRNASnophDkSF7evligMc21HGm8A7fh3PdBzr9VrepvehgmyUgRnLg==}
+    peerDependencies:
+      solid-js: ^1.6.16
 
   '@vencord/venmic@6.1.0':
     resolution: {integrity: sha512-YiCtzml/W8tYbGhu3jm5jfbbEnl2slKKARNK0jO+8qV979k9eFnfIRTxvhMN/SWq1h8ZNJdXVwvXpffQwq0RuA==}
@@ -3842,6 +3850,10 @@ snapshots:
       idb: 7.1.1
       solid-js: 1.6.16
       spitroast: 2.1.4
+
+  '@uwu/shelter-ui@0.0.6(solid-js@1.9.14)':
+    dependencies:
+      solid-js: 1.9.14
 
   '@vencord/venmic@6.1.0':
     dependencies:
