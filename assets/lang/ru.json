@@ -52,8 +52,8 @@
     "settings-openCustomIconDialog": "Выберите иконку рабочего стола",
     "settings-mintoTray": "Работа в фоне",
     "settings-mintoTray-desc": "При выключенной настройке, закрытие окна будет полностью закрывать Legcord, а при включённой, Legcord просто пойдёт отдыхать в ваш системный трей.",
-    "settings-startMinimized": "Запуск в свёрнутом виде",
-    "settings-startMinimized-desc": "Legcord всегда будет запускаться в фоне, чтобы не мешать вам.",
+    "settings-startMinimized": "Окно при запуске",
+    "settings-startMinimized-desc": "Как Legcord появляется при запуске. Режим трея полностью скрывает окно (нужна иконка в трее).",
     "settings-csp": "Политика Защиты Данных (CSP)",
     "settings-csp-desc": "Установите строгость защиты данных в Legcord. Строгий режим CSP безопаснее, но может быть несовместим с некоторыми модами/темами/плагинами.",
     "settings-csp-strict": "Строгий",
@@ -221,5 +221,8 @@
     "settings-trayIcon-black-plug": "Чёрный Штекер",
     "settings-trayIcon-black-plug-alt": "Чёрный Штекер (Альт.)",
     "settings-category-behaviour": "Поведение",
-    "menu-quit": "Выход"
+    "menu-quit": "Выход",
+    "settings-startMinimized-off": "Обычный",
+    "settings-startMinimized-minimized": "Свёрнуто в панель задач",
+    "settings-startMinimized-tray": "Скрыто в трее"
 }

@@ -12,14 +12,15 @@ import {
     firstRun,
     getConfig,
     getConfigLocation,
+    isBackgroundStart,
     setConfig,
     setFirstRun,
     setup,
-    shouldStartMinimized,
 } from "./common/config.js";
 import { getPreset } from "./common/flags.js";
 import { setLang } from "./common/lang.js";
 import { applyProxyCommandLineSwitches, applySessionProxy, configureNodeProxyEnv } from "./common/proxy.js";
+import { revealWindow } from "./common/windowVisibility.js";
 import { setupGlobalShortcuts, startDbusService } from "./dbus.js";
 
 // Chrome flags tracking
@@ -111,7 +112,7 @@ export async function init(): Promise<void> {
     if (bypassSetup || !(firstRun === true || undefined)) {
         // Splash owns the final show/hide via splashEnd; skip it when splash is disabled
         // or when we intentionally start in the background.
-        if (getConfig("skipSplash") === false && !shouldStartMinimized()) {
+        if (getConfig("skipSplash") === false && !isBackgroundStart()) {
             void createSplashWindow(); // NOTE - Awaiting will hang at start
         }
         createWindow();
@@ -407,7 +408,7 @@ if (!app.requestSingleInstanceLock() && getConfig("multiInstance") === false) {
                 void init();
             } else {
                 BrowserWindow.getAllWindows().forEach((window) => {
-                    window.show();
+                    revealWindow(window);
                 });
             }
         });

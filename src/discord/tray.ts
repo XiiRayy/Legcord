@@ -5,6 +5,7 @@ import { navigateTo } from "../common/dom.js";
 import { setForceQuit } from "../common/forceQuit.js";
 import { getLang } from "../common/lang.js";
 import { getDisplayVersion } from "../common/version.js";
+import { revealWindow } from "../common/windowVisibility.js";
 import { handleRestart } from "../main.js";
 import { mainWindows } from "./window.js";
 export let tray: Tray;
@@ -44,7 +45,7 @@ export function createTray() {
             label: getLang("tray-openLegcord"),
             click() {
                 mainWindows.forEach((mainWindow) => {
-                    mainWindow.show();
+                    revealWindow(mainWindow);
                 });
             },
         },
@@ -52,7 +53,7 @@ export function createTray() {
             label: getLang("tray-openSettings"),
             click() {
                 mainWindows.forEach((mainWindow) => {
-                    mainWindow.show();
+                    revealWindow(mainWindow);
                 });
             },
         },
@@ -86,7 +87,7 @@ export function createTray() {
     tray.setToolTip(getLang("tray-tooltip"));
     tray.on("click", () => {
         mainWindows.forEach((mainWindow) => {
-            mainWindow.show();
+            revealWindow(mainWindow);
         });
     });
 }

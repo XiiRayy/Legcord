@@ -43,7 +43,7 @@ const defaults: Settings = {
     performanceMode: "none",
     skipSplash: false,
     inviteWebsocket: true,
-    startMinimized: false,
+    startMinimized: "off",
     disableHttpCache: false,
     customJsBundle: "https://legcord.app/placeholder.js",
     customCssBundle: "https://legcord.app/placeholder.css",
@@ -123,9 +123,29 @@ export function getConfig<K extends keyof Settings>(object: K): Settings[K] {
     return returnData[object];
 }
 
-/** True when the settings toggle is on or `--start-minimized` was passed for this session. */
-export function shouldStartMinimized(): boolean {
-    return process.argv.includes("--start-minimized") || getConfig("startMinimized") === true;
+const START_MINIMIZED_MODES = new Set<Settings["startMinimized"]>(["off", "minimized", "tray"]);
+
+/** Effective startup window mode (CLI overrides are session-only). */
+export function getStartMinimizedMode(): Settings["startMinimized"] {
+    if (process.argv.includes("--start-in-tray")) return "tray";
+    if (process.argv.includes("--start-minimized")) return "minimized";
+    const mode = getConfig("startMinimized");
+    return START_MINIMIZED_MODES.has(mode) ? mode : "off";
+}
+
+/** True when startup should not show the window normally (skip splash). */
+export function isBackgroundStart(): boolean {
+    return getStartMinimizedMode() !== "off";
+}
+
+function migrateStartMinimized(settingsObject: Record<string, unknown>): boolean {
+    const value = settingsObject.startMinimized;
+    if (typeof value === "boolean") {
+        settingsObject.startMinimized = value ? "tray" : "off";
+        console.log(`[Config] Migrated startMinimized boolean → "${settingsObject.startMinimized}"`);
+        return true;
+    }
+    return false;
 }
 export function setConfig<K extends keyof Settings>(object: K, toSet: Settings[K]): void {
     const rawData = readFileSync(getConfigLocation(), "utf-8");
@@ -189,10 +209,15 @@ export function checkIfConfigExists(): void {
 export function checkIfConfigIsBroken(): void {
     try {
         const settingsData = readFileSync(getConfigLocation(), "utf-8");
-        const settingsObject = JSON.parse(settingsData) as Settings;
+        const settingsObject = JSON.parse(settingsData) as Settings & Record<string, unknown>;
+
+        // Migrate before typeof repair — boolean → "tray" | "off"
+        if (migrateStartMinimized(settingsObject)) {
+            writeFileSync(getConfigLocation(), JSON.stringify(settingsObject, null, 4), "utf-8");
+        }
 
         // Performance optimization: Update cache after validation
-        configCache = settingsObject;
+        configCache = settingsObject as Settings;
         configCacheTime = Date.now();
 
         let configWasFine = true;

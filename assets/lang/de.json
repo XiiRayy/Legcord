@@ -52,8 +52,8 @@
     "settings-csp-desc": "Legcord CSP ist unser System, der das Laden von benutzerdefinierten Inhalten in die Discord-App verwaltet. Dinge wie Client-Mods und Designs hängen davon ab. Deaktivieren Sie es, wenn Sie Mods und benutzerdefinierte Stile entfernen möchten.",
     "settings-mintoTray": "Im Hintergrund arbeiten",
     "settings-mintoTray-desc": "Wenn diese Option deaktiviert ist, wird Legcord wie jedes andere Fenster geschlossen, wenn es geschlossen wird. Andernfalls bleibt es in Ihrer Taskleiste für später gespeichert.",
-    "settings-startMinimized": "Minimiert starten",
-    "settings-startMinimized-desc": "Legcord startet im Hintergrund und bleibt Ihnen nicht im Weg.",
+    "settings-startMinimized": "Startfenster",
+    "settings-startMinimized-desc": "Legt fest, wie Legcord beim Start erscheint. Tray-Modus blendet das Fenster vollständig aus (Tray-Symbol muss aktiviert sein).",
     "settings-useSystemCssEditor": "System-CSS-Editor verwenden",
     "settings-useSystemCssEditor-desc": "Verwenden Sie den System-CSS-Editor, um CSS zu bearbeiten.",
     "settings-MultiInstance": "Mehrfachinstanz",
@@ -243,5 +243,8 @@
     "settings-csp-vanilla": "Vanilla",
     "settings-firstTimeCrash": "Wir richten Dinge für sie ein!",
     "settings-automaticClientUpdates": "Automatische client updates",
-    "settings-automaticClientUpdates-desc": "Deaktiviert automatische Legcord Updates"
+    "settings-automaticClientUpdates-desc": "Deaktiviert automatische Legcord Updates",
+    "settings-startMinimized-off": "Normal",
+    "settings-startMinimized-minimized": "Minimiert in die Taskleiste",
+    "settings-startMinimized-tray": "Im Tray versteckt"
 }

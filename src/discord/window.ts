@@ -14,7 +14,7 @@ import {
     shell,
 } from "electron";
 import contextMenu from "electron-context-menu";
-import { firstRun, getConfig, setConfig, shouldStartMinimized } from "../common/config.js";
+import { firstRun, getConfig, isBackgroundStart, setConfig } from "../common/config.js";
 import { navigateTo } from "../common/dom.js";
 import { forceQuit, setForceQuit } from "../common/forceQuit.js";
 import { handleCommands, passedValidArgument } from "../common/handleCommands.js";
@@ -35,6 +35,7 @@ import {
     sanitizeWindowBounds,
 } from "../common/windowBounds.js";
 import { getWindowState, setWindowState } from "../common/windowState.js";
+import { applyStartupWindowVisibility, revealWindow } from "../common/windowVisibility.js";
 import { disconnectDbusService } from "../dbus.js";
 import { init } from "../main.js";
 import { registerGlobalKeybinds } from "./globalKeybinds.js";
@@ -182,8 +183,7 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
                     // we should focus our window if the user is not running special commands.
                     if (passedWindow && !passedValidArgument(commandLine)) {
                         if (passedWindow.isMinimized()) passedWindow.restore();
-                        passedWindow.show();
-                        passedWindow.focus();
+                        revealWindow(passedWindow);
                     }
                     if (commandLine && commandLine.length > 0) {
                         handleCommands(commandLine);
@@ -475,12 +475,8 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
     }
 
     // When splash won't run, finalize visibility here (splashEnd never fires).
-    if (getConfig("skipSplash") || shouldStartMinimized()) {
-        if (shouldStartMinimized()) {
-            passedWindow.hide();
-        } else {
-            passedWindow.show();
-        }
+    if (getConfig("skipSplash") || isBackgroundStart()) {
+        applyStartupWindowVisibility(passedWindow);
     }
 }
 

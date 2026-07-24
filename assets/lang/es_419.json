@@ -52,8 +52,8 @@
     "settings-csp-desc": "Legcord CSP es nuestro sistema que gestiona la carga de contenido personalizado en la aplicación Discord. Elementos como los mods y los temas del cliente dependen de él. Desactívalo si quieres deshacerte de los mods y los estilos personalizados.",
     "settings-mintoTray": "Trabajar en segundo plano",
     "settings-mintoTray-desc": "Cuando está desactivado, Legcord se cerrará como cualquier otra ventana al cerrarlo; de lo contrario, permanecerá en la bandeja del sistema para su uso posterior.",
-    "settings-startMinimized": "Iniciar minimizado",
-    "settings-startMinimized-desc": "Legcord se inicia en segundo plano y no interfiere en tu trabajo.",
+    "settings-startMinimized": "Ventana al iniciar",
+    "settings-startMinimized-desc": "Elige cómo aparece Legcord al iniciar. El modo bandeja oculta la ventana por completo (hace falta el icono de bandeja).",
     "settings-useSystemCssEditor": "Utilizar el editor CSS del sistema",
     "settings-useSystemCssEditor-desc": "Utilice el editor CSS del sistema para editar CSS.",
     "settings-MultiInstance": "Múltiples instancias",
@@ -304,5 +304,8 @@
     "games-application": "Aplicación",
     "settings-vaapi": "VAAPI",
     "settings-vaapi-desc": "Utiliza VAAPI (aceleración por hardware) para la decodificación de vídeo en Linux. Esto reduce considerablemente el uso de la CPU durante el uso compartido de pantalla, pero puede causar problemas en algunos sistemas. Desactívalo si experimentas bloqueos o pantallas en negro durante el uso compartido de pantalla.",
-    "settings-material": "Material de Ventana"
+    "settings-material": "Material de Ventana",
+    "settings-startMinimized-off": "Normal",
+    "settings-startMinimized-minimized": "Minimizada en la barra de tareas",
+    "settings-startMinimized-tray": "Oculta en la bandeja"
 }

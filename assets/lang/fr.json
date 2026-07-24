@@ -36,7 +36,7 @@
     "settings-audio-loopback": "Loopback",
     "settings-audio-loopbackWithMute": "Loopback avec sourdine",
     "settings-openCustomIconDialog": "Définir une icône de bureau",
-    "settings-startMinimized-desc": "Legcord démarre en arrière-plan sans vous déranger.",
+    "settings-startMinimized-desc": "Choisit comment Legcord apparaît au lancement. Le mode tray masque complètement la fenêtre (icône de tray requise).",
     "settings-useSystemCssEditor": "Utiliser l'éditeur CSS du système",
     "settings-useSystemCssEditor-desc": "Utiliser l'éditeur CSS du système pour modifier le CSS.",
     "settings-MultiInstance": "Multi-instances",
@@ -109,7 +109,7 @@
     "settings-csp-desc": "Legcord CSP est notre système qui gère le chargement du contenu personnalisé dans l'application Discord. Des éléments tels que les mods et les thèmes en dépendent. Désactivez-le si vous souhaitez vous débarrasser des mods et des styles personnalisés.",
     "settings-mintoTray": "Actif en arrière-plan",
     "settings-mintoTray-desc": "Si désactivé, Legcord se fermera comme n'importe quelle autre fenêtre, sinon il restera actif dans la barre d'état pour plus tard.",
-    "settings-startMinimized": "Démarrer en mode minimisé",
+    "settings-startMinimized": "Fenêtre au démarrage",
     "settings-noBundleUpdates": "Pas de mises à jour",
     "settings-noBundleUpdates-desc": "Désactive les mises à jour automatique des mods.",
     "settings-mobileMode-desc": "Si vous êtes sur un appareil doté d'un écran tactile cette fonctionnalité est faite pour vous ! Elle active le mode mobile caché de Discord conçu pour les téléphones et tablettes. La seule fonction majeure manquante est le tchat vocal. Idéal pour les utilisateurs de PinePhone ou équivalents.",
@@ -344,5 +344,8 @@
     "supportBanner-title": "Soutenir le projet",
     "supportBanner-subtitle": "Aidez-nous à continuer le développement de Legcord. Votre soutien permet de maintenir le projet en vie et nous permet de proposer plus de fonctionnalités.",
     "supportBanner-donate": "Faire un don",
-    "keybind-enabled": "Activé"
+    "keybind-enabled": "Activé",
+    "settings-startMinimized-off": "Normale",
+    "settings-startMinimized-minimized": "Réduite dans la barre des tâches",
+    "settings-startMinimized-tray": "Masquée dans le tray"
 }

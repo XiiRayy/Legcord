@@ -58,7 +58,8 @@ export interface Settings {
         | "none";
     customJsBundle: RequestInfo | URL | string;
     customCssBundle: RequestInfo | URL | string;
-    startMinimized: boolean;
+    /** How the main window appears on launch: normal, taskbar minimized, or tray-only. */
+    startMinimized: "off" | "minimized" | "tray";
     keybinds: Keybind[];
     hardwareAcceleration: boolean;
     /** Rewrite H.264 Constrained Baseline (42e0) → Baseline (4200) in WebRTC SDP for HW encode. */

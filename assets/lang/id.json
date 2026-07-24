@@ -52,8 +52,8 @@
     "settings-csp-desc": "Atur tingkat keketatan Kebijakan Keamanan Konten Legcord. CSP ketat memberikan keamanan lebih baik tetapi dapat menyebabkan masalah kompatibilitas dengan beberapa mod/tema/plugin klien.",
     "settings-mintoTray": "Bekerja di latar belakang",
     "settings-mintoTray-desc": "Ketika dinonaktifkan, Legcord akan ditutup seperti jendela lainnya saat ditutup, sedangkan jika tidak, ia akan tetap berada di area sistem tray Anda untuk digunakan nanti.",
-    "settings-startMinimized": "Mulai dalam mode minimized",
-    "settings-startMinimized-desc": "Legcord berjalan di latar belakang dan tidak mengganggu Anda.",
+    "settings-startMinimized": "Jendela saat mulai",
+    "settings-startMinimized-desc": "Pilih bagaimana Legcord muncul saat diluncurkan. Mode tray menyembunyikan jendela sepenuhnya (ikon tray harus diaktifkan).",
     "settings-useSystemCssEditor": "Gunakan editor CSS sistem",
     "settings-useSystemCssEditor-desc": "Gunakan editor CSS sistem untuk mengedit CSS.",
     "settings-MultiInstance": "Multi Instans",
@@ -348,5 +348,8 @@
     "backup-restoreDoneBody": "Data Anda telah dipulihkan. Mulai ulang Legcord agar semua perubahan berlaku.",
     "supportBanner-title": "Dukung Proyek",
     "supportBanner-subtitle": "Bantu kami terus mengembangkan Legcord. Dukungan Anda menjaga proyek tetap hidup dan memungkinkan kami menghadirkan lebih banyak fitur.",
-    "supportBanner-donate": "Donasi"
+    "supportBanner-donate": "Donasi",
+    "settings-startMinimized-off": "Normal",
+    "settings-startMinimized-minimized": "Diminimalkan ke bilah tugas",
+    "settings-startMinimized-tray": "Tersembunyi di tray"
 }

@@ -18,7 +18,7 @@ import {
     unblacklistGame as blacklistGameRemove,
     getBlacklist,
 } from "../common/blacklistGame.js";
-import { getConfig, getConfigLocation, setConfig, setConfigBulk, shouldStartMinimized } from "../common/config.js";
+import { getConfig, getConfigLocation, setConfig, setConfigBulk } from "../common/config.js";
 import { addDetectable, getDetectables, removeDetectable } from "../common/detectables.js";
 import { getLang, getLangName, getRawLang, setLang } from "../common/lang.js";
 import {
@@ -32,6 +32,7 @@ import {
     uninstallTheme,
 } from "../common/themes.js";
 import { getDisplayVersion, getVersion } from "../common/version.js";
+import { applyStartupWindowVisibility, revealWindow } from "../common/windowVisibility.js";
 import { openCssEditor } from "../cssEditor/main.js";
 import { getAppliedFlags, handleRestart } from "../main.js";
 import { isPowerSavingEnabled, setPowerSaving } from "../power.js";
@@ -218,11 +219,7 @@ export function registerIpc(passedWindow: BrowserWindow): void {
 
     ipcMain.on("splashEnd", () => {
         splashWindow?.close();
-        if (shouldStartMinimized()) {
-            passedWindow.hide();
-        } else {
-            passedWindow.show();
-        }
+        applyStartupWindowVisibility(passedWindow);
     });
     ipcMain.on("setLang", (_event, lang: string) => {
         setLang(lang);
@@ -270,7 +267,7 @@ export function registerIpc(passedWindow: BrowserWindow): void {
         passedWindow.unmaximize();
     });
     ipcMain.on("win-show", () => {
-        passedWindow.show();
+        revealWindow(passedWindow);
     });
     ipcMain.on("win-hide", () => {
         passedWindow.hide();

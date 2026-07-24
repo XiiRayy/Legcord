@@ -135,8 +135,8 @@
     "settings-openCustomIconDialog": "Definir ícone de desktop",
     "settings-mintoTray": "Funcionar em segundo plano",
     "settings-mintoTray-desc": "Quando desativado, Legcord será fechado como qualquer outra janela, do contrário, ele funcionará em segundo plano e ficará na bandeja do sistema disponível a qualquer momento.",
-    "settings-startMinimized": "Abrir minimizado",
-    "settings-startMinimized-desc": "Legcord inicia em segundo plano e fica fora do seu caminho.",
+    "settings-startMinimized": "Janela ao iniciar",
+    "settings-startMinimized-desc": "Escolha como o Legcord aparece ao iniciar. O modo tabuleiro oculta a janela por completo (é preciso o ícone do tabuleiro).",
     "settings-csp-none": "Nenhum",
     "settings-useSystemCssEditor": "Usar editor de estilo (CSS) do sistema",
     "settings-useSystemCssEditor-desc": "Usar editor de estilo padrão do sistema para editar CSS.",
@@ -351,5 +351,8 @@
     "backup-restoreDoneTitle": "Restauração completa",
     "backup-restoreDoneBody": "Os seus dados foram restaurados. Reinicie o Legcord para que todas as mudanças tomem efeito.",
     "supportBanner-title": "Suportar o Projeto",
-    "supportBanner-subtitle": "Ajude-nos a continuar a desenvolver o Legcord. O seu suporte mantém o projeto vivo e permite-nos introduzir mais funcionalidades."
+    "supportBanner-subtitle": "Ajude-nos a continuar a desenvolver o Legcord. O seu suporte mantém o projeto vivo e permite-nos introduzir mais funcionalidades.",
+    "settings-startMinimized-off": "Normal",
+    "settings-startMinimized-minimized": "Minimizado na barra de tarefas",
+    "settings-startMinimized-tray": "Oculto no tabuleiro"
 }

@@ -101,6 +101,9 @@ export function SettingsPage() {
             t["settings-disableAutogain"],
             t["settings-mintoTray"],
             t["settings-startMinimized"],
+            t["settings-startMinimized-off"],
+            t["settings-startMinimized-minimized"],
+            t["settings-startMinimized-tray"],
             t["settings-smoothScroll"],
             t["settings-autoScroll"],
             t["settings-spellcheck"],
@@ -485,14 +488,26 @@ export function SettingsPage() {
                         {t["settings-mintoTray"]}
                     </SwitchItem>
                 </SearchableSetting>
-                <SearchableSetting keywords={[t["settings-startMinimized"], t["settings-startMinimized-desc"]]}>
-                    <SwitchItem
-                        note={t["settings-startMinimized-desc"]}
+                <SearchableSetting
+                    keywords={[
+                        t["settings-startMinimized"],
+                        t["settings-startMinimized-desc"],
+                        t["settings-startMinimized-off"],
+                        t["settings-startMinimized-minimized"],
+                        t["settings-startMinimized-tray"],
+                    ]}
+                >
+                    <DropdownItem
                         value={settings.startMinimized}
-                        onChange={(e: boolean) => setConfig("startMinimized", e, true)}
-                    >
-                        {t["settings-startMinimized"]}
-                    </SwitchItem>
+                        onChange={(v) => setConfig("startMinimized", v as Settings["startMinimized"], true)}
+                        title={t["settings-startMinimized"]}
+                        note={t["settings-startMinimized-desc"]}
+                        options={[
+                            { label: t["settings-startMinimized-off"], value: "off" },
+                            { label: t["settings-startMinimized-minimized"], value: "minimized" },
+                            { label: t["settings-startMinimized-tray"], value: "tray" },
+                        ]}
+                    />
                 </SearchableSetting>
                 <SearchableSetting keywords={[t["settings-smoothScroll"], t["settings-smoothScroll-desc"]]}>
                     <SwitchItem

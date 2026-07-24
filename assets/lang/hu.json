@@ -51,8 +51,8 @@
     "settings-csp-desc": "Állítsd be a Legcord tartalombiztonsági szabályzatának szigorúságát. A szigorú CSP jobb biztonságot nyújt, de kompatibilitási problémákat okozhat egyes kliens modokkal/témákkal/bővítményekkel.",
     "settings-mintoTray": "Futás a háttérben",
     "settings-mintoTray-desc": "Ha le van tiltva, a Legcord a többi ablakhoz hasonlóan bezáródik, különben csak a tálcára csukódik le.",
-    "settings-startMinimized": "Kisablakos indítás",
-    "settings-startMinimized-desc": "A Legcord a háttérben indul el, és nem zavar.",
+    "settings-startMinimized": "Induló ablak",
+    "settings-startMinimized-desc": "Meghatározza, hogyan jelenik meg a Legcord indításkor. A tálca mód teljesen elrejti az ablakot (tálcaikon szükséges).",
     "settings-useSystemCssEditor": "Használja a rendszer CSS-szerkesztőjét",
     "settings-useSystemCssEditor-desc": "A CSS szerkesztéséhez használja a rendszer CSS-szerkesztőjét.",
     "settings-MultiInstance": "Több példány",
@@ -351,5 +351,8 @@
     "settings-csp-none": "Egyik sem",
     "keybind-openSettings": "Beállítások megnyitása",
     "settings-firstTimeCrash": "Mindent előkészítünk számodra!",
-    "settings-firstTimeCrash-desc": "Az első indításkor a beállítások még nem érhetők el. Kérjük, használd az alábbi gombot az újraindításhoz, és a beállítások az újraindítás után már elérhetőek lesznek."
+    "settings-firstTimeCrash-desc": "Az első indításkor a beállítások még nem érhetők el. Kérjük, használd az alábbi gombot az újraindításhoz, és a beállítások az újraindítás után már elérhetőek lesznek.",
+    "settings-startMinimized-off": "Normál",
+    "settings-startMinimized-minimized": "Kis méretű a tálcán",
+    "settings-startMinimized-tray": "Elrejtve a rendszertálcán"
 }

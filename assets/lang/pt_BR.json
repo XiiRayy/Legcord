@@ -100,8 +100,8 @@
     "settings-csp-desc": "\"Legcord CSP\" é o nosso sistema que cuida do carregamento de conteúdo customizado dentro do cliente do DIscord. Coisas como modificações e temas dependem desse sistema. Desabilite se quiser se livrar de modificações e estilos customizados.",
     "settings-mintoTray": "Funcionar em segundo plano",
     "settings-mintoTray-desc": "Quando desabilitado, Legcord será fechado como qualquer outra janela, do contrário, ele funcionará em segundo plano e ficará na bandeja do sistema disponível a qualquer momento.",
-    "settings-startMinimized": "Abrir minimizado",
-    "settings-startMinimized-desc": "Legcord inicia em segundo plano e fica fora do seu caminho.",
+    "settings-startMinimized": "Janela ao iniciar",
+    "settings-startMinimized-desc": "Escolha como o Legcord aparece ao iniciar. O modo bandeja oculta a janela por completo (é preciso o ícone da bandeja).",
     "settings-useSystemCssEditor": "Usar editor de estilo (CSS) do sistema",
     "settings-useSystemCssEditor-desc": "Usar editor de estilo padrão do sistema para editar CSS.",
     "settings-MultiInstance": "Múltiplas instâncias",
@@ -250,5 +250,8 @@
     "setup-trayEnableDesc": "Mostrar o Legcord na bandeja do sistema",
     "setup-trayDisableTitle": "Desabilitar ícone de bandeja",
     "setup-trayDisableDesc": "Não mostrar o Legcord na bandeja do sistema",
-    "setup-finishTitle": "Você está pronto!"
+    "setup-finishTitle": "Você está pronto!",
+    "settings-startMinimized-off": "Normal",
+    "settings-startMinimized-minimized": "Minimizado na barra de tarefas",
+    "settings-startMinimized-tray": "Oculto na bandeja"
 }

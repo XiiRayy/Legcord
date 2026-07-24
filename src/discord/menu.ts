@@ -4,6 +4,7 @@ import { getConfig } from "../common/config.js";
 import { setForceQuit } from "../common/forceQuit.js";
 import { openSettings, runAction } from "../common/keybindActions.js";
 import { getLang } from "../common/lang.js";
+import { revealWindow } from "../common/windowVisibility.js";
 import { mainWindows } from "./window.js";
 
 const keybindActionLabels: Record<KeybindActions, string> = {
@@ -53,7 +54,7 @@ export function setMenu(): void {
                     accelerator: "Cmd+,",
                     click() {
                         mainWindows.forEach((mainWindow) => {
-                            mainWindow.show();
+                            revealWindow(mainWindow);
                             openSettings();
                         });
                     },
