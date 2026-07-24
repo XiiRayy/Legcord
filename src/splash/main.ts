@@ -1,12 +1,12 @@
 import path from "node:path";
 import { BrowserWindow, ipcMain } from "electron";
 import isDev from "electron-is-dev";
-import { getConfig } from "../common/config.js";
+import { getConfig, shouldStartMinimized } from "../common/config.js";
 import { getLang } from "../common/lang.js";
 
 export let splashWindow: BrowserWindow;
 export async function createSplashWindow(): Promise<void> {
-    if (getConfig("startMinimized")) return;
+    if (shouldStartMinimized()) return;
     splashWindow = new BrowserWindow({
         width: 300,
         height: 350,

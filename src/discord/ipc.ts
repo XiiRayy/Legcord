@@ -18,7 +18,7 @@ import {
     unblacklistGame as blacklistGameRemove,
     getBlacklist,
 } from "../common/blacklistGame.js";
-import { getConfig, getConfigLocation, setConfig, setConfigBulk } from "../common/config.js";
+import { getConfig, getConfigLocation, setConfig, setConfigBulk, shouldStartMinimized } from "../common/config.js";
 import { addDetectable, getDetectables, removeDetectable } from "../common/detectables.js";
 import { getLang, getLangName, getRawLang, setLang } from "../common/lang.js";
 import {
@@ -217,8 +217,8 @@ export function registerIpc(passedWindow: BrowserWindow): void {
     });
 
     ipcMain.on("splashEnd", () => {
-        splashWindow.close();
-        if (getConfig("startMinimized")) {
+        splashWindow?.close();
+        if (shouldStartMinimized()) {
             passedWindow.hide();
         } else {
             passedWindow.show();

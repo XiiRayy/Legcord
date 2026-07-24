@@ -15,6 +15,7 @@ import {
     setConfig,
     setFirstRun,
     setup,
+    shouldStartMinimized,
 } from "./common/config.js";
 import { getPreset } from "./common/flags.js";
 import { setLang } from "./common/lang.js";
@@ -108,7 +109,9 @@ function args(): void {
 export async function init(): Promise<void> {
     // Skip setup if bypass flag was used
     if (bypassSetup || !(firstRun === true || undefined)) {
-        if (getConfig("skipSplash") === false) {
+        // Splash owns the final show/hide via splashEnd; skip it when splash is disabled
+        // or when we intentionally start in the background.
+        if (getConfig("skipSplash") === false && !shouldStartMinimized()) {
             void createSplashWindow(); // NOTE - Awaiting will hang at start
         }
         createWindow();

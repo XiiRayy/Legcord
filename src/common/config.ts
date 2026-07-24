@@ -122,6 +122,11 @@ export function getConfig<K extends keyof Settings>(object: K): Settings[K] {
     configCacheTime = now;
     return returnData[object];
 }
+
+/** True when the settings toggle is on or `--start-minimized` was passed for this session. */
+export function shouldStartMinimized(): boolean {
+    return process.argv.includes("--start-minimized") || getConfig("startMinimized") === true;
+}
 export function setConfig<K extends keyof Settings>(object: K, toSet: Settings[K]): void {
     const rawData = readFileSync(getConfigLocation(), "utf-8");
     const parsed = JSON.parse(rawData) as Settings;

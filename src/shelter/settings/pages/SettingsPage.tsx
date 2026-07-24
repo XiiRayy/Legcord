@@ -489,7 +489,7 @@ export function SettingsPage() {
                     <SwitchItem
                         note={t["settings-startMinimized-desc"]}
                         value={settings.startMinimized}
-                        onChange={(e: boolean) => setConfig("startMinimized", e)}
+                        onChange={(e: boolean) => setConfig("startMinimized", e, true)}
                     >
                         {t["settings-startMinimized"]}
                     </SwitchItem>

@@ -14,7 +14,7 @@ import {
     shell,
 } from "electron";
 import contextMenu from "electron-context-menu";
-import { firstRun, getConfig, setConfig } from "../common/config.js";
+import { firstRun, getConfig, setConfig, shouldStartMinimized } from "../common/config.js";
 import { navigateTo } from "../common/dom.js";
 import { forceQuit, setForceQuit } from "../common/forceQuit.js";
 import { handleCommands, passedValidArgument } from "../common/handleCommands.js";
@@ -474,8 +474,13 @@ function doAfterDefiningTheWindow(passedWindow: BrowserWindow): void {
             break;
     }
 
-    if (getConfig("skipSplash")) {
-        passedWindow.show();
+    // When splash won't run, finalize visibility here (splashEnd never fires).
+    if (getConfig("skipSplash") || shouldStartMinimized()) {
+        if (shouldStartMinimized()) {
+            passedWindow.hide();
+        } else {
+            passedWindow.show();
+        }
     }
 }
 
