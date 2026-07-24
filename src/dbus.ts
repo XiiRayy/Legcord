@@ -1,7 +1,13 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { interface as dbusInterface, type ProxyInterface, sessionBus, Variant } from "@jellybrick/dbus-next";
+import {
+    interface as dbusInterface,
+    type MessageBus,
+    type ProxyInterface,
+    sessionBus,
+    Variant,
+} from "@jellybrick/dbus-next";
 import { ACTION_FRIENDLY_NAMES, EXCLUDED_FROM_SHORTCUTS, ValidActions } from "./common/commandDefinitions";
 import { handleAction, isValidAction } from "./common/handleCommands";
 
@@ -12,6 +18,8 @@ export const DBUS_ADDRESS = "/app/legcord/Legcord";
 
 const FREEDESKTOP_PORTAL_NAME = "org.freedesktop.portal.Desktop";
 const FREEDESKTOP_PORTAL_ADDRESS = "/org/freedesktop/portal/desktop";
+
+const isLinux = process.platform === "linux";
 
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html
 type Shortcuts = [string, { description: Variant<string> }];
@@ -74,8 +82,16 @@ class LegcordInterface extends Interface {
     }
 }
 
-const bus = sessionBus();
-var legcordInterface = new LegcordInterface();
+let bus: MessageBus | undefined;
+let legcordInterface: LegcordInterface | undefined;
+
+function getBus(): MessageBus {
+    if (!bus) {
+        bus = sessionBus();
+        legcordInterface = new LegcordInterface();
+    }
+    return bus;
+}
 
 function ensureDesktopFile(): void {
     const dir = join(homedir(), ".local/share/applications");
@@ -88,14 +104,18 @@ function ensureDesktopFile(): void {
 
 function registerAppId(): Promise<void> {
     ensureDesktopFile(); // we need a desktop file at XDG_PATH so we can associate with legcord's app_id
-    return bus.getProxyObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop").then((portalObj) => {
-        const registry: RegistryInterface = portalObj.getInterface("org.freedesktop.host.portal.Registry");
-        return registry.Register(DBUS_INTERFACE_NAME, {});
-    });
+    return getBus()
+        .getProxyObject("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
+        .then((portalObj) => {
+            const registry: RegistryInterface = portalObj.getInterface("org.freedesktop.host.portal.Registry");
+            return registry.Register(DBUS_INTERFACE_NAME, {});
+        });
 }
 
 export async function setupGlobalShortcuts() {
-    const portalObj = await bus.getProxyObject(FREEDESKTOP_PORTAL_NAME, FREEDESKTOP_PORTAL_ADDRESS);
+    if (!isLinux) return;
+
+    const portalObj = await getBus().getProxyObject(FREEDESKTOP_PORTAL_NAME, FREEDESKTOP_PORTAL_ADDRESS);
 
     const properties: PropertiesInterface = portalObj.getInterface("org.freedesktop.DBus.Properties");
     const globalShortcuts: GlobalShortcuts = portalObj.getInterface("org.freedesktop.portal.GlobalShortcuts");
@@ -108,17 +128,19 @@ export async function setupGlobalShortcuts() {
     console.debug(`Registered ${DBUS_INTERFACE_NAME} in freedesktop Registry.`);
 
     function awaitResponse(requestPath: string): Promise<Record<string, unknown>> {
-        return bus.getProxyObject(FREEDESKTOP_PORTAL_NAME, requestPath).then(
-            (requestObj) =>
-                new Promise<Record<string, unknown>>((resolve, reject) => {
-                    const requestIface = requestObj.getInterface("org.freedesktop.portal.Request");
+        return getBus()
+            .getProxyObject(FREEDESKTOP_PORTAL_NAME, requestPath)
+            .then(
+                (requestObj) =>
+                    new Promise<Record<string, unknown>>((resolve, reject) => {
+                        const requestIface = requestObj.getInterface("org.freedesktop.portal.Request");
 
-                    requestIface.once("Response", (responseCode: number, results: Record<string, unknown>) => {
-                        if (responseCode === 0) resolve(results);
-                        else reject(new Error(`Request failed with code ${responseCode}`));
-                    });
-                }),
-        );
+                        requestIface.once("Response", (responseCode: number, results: Record<string, unknown>) => {
+                            if (responseCode === 0) resolve(results);
+                            else reject(new Error(`Request failed with code ${responseCode}`));
+                        });
+                    }),
+            );
     }
 
     const sessionRequestPath = await globalShortcuts.CreateSession({
@@ -146,13 +168,19 @@ export async function setupGlobalShortcuts() {
 }
 
 export async function startDbusService(): Promise<void> {
-    await bus.requestName(DBUS_INTERFACE_NAME);
-    bus.export(DBUS_ADDRESS, legcordInterface);
+    if (!isLinux) return;
+
+    const dbus = getBus();
+    await dbus.requestName(DBUS_INTERFACE_NAME);
+    dbus.export(DBUS_ADDRESS, legcordInterface!);
     console.info(`Registered DBus service at ${DBUS_INTERFACE_NAME} ${DBUS_ADDRESS}`);
 
     // console.debug(legcordInterface)
 }
 
 export function disconnectDbusService(): void {
+    if (!bus) return;
     bus.disconnect();
+    bus = undefined;
+    legcordInterface = undefined;
 }
