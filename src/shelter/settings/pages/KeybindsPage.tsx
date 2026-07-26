@@ -31,6 +31,20 @@ export function KeybindsPage() {
                     {t["keybind-addKeybind"]}
                 </Button>
             </div>
+            <Show when={window.legcord.platform === "linux"}>
+                <div
+                    style={{
+                        background: "rgba(255, 255, 210, 0.85)",
+                        border: "1px solid #e6c200",
+                        color: "#2d2100",
+                        padding: "12px 16px",
+                    }}
+                >
+                    Adding keybinds on Linux is recommended to be done through the system settings instead of Legcord.
+                    This is because some keybinds may not work properly due to how Linux handles global shortcuts. If
+                    you want to add a keybind through Legcord, please make sure to test it first.
+                </div>
+            </Show>
             <Show
                 when={keybinds().length > 0}
                 fallback={
