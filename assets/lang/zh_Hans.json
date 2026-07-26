@@ -25,6 +25,6 @@
     "settings-transparency-universal": "通用",
     "settings-transparency-modern": "现代",
     "settings-theme-transparent": "透明",
-    "settings-transparency-tahoe-warning": "在 MacOS 26 Tahoe 上，启用透明效果可能会导致明显卡顿。",
+    "settings-transparency-tahoe-warning": "在 macOS 26 Tahoe 上，启用透明效果可能会导致明显卡顿。",
     "settings-popoutPiP": "通话窗口弹出时保持置顶"
 }

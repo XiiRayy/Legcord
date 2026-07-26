@@ -31,7 +31,7 @@
     "settings-sleepInBackground": "Descansar em segundo plano",
     "settings-sleepInBackground-desc": "Ativa a limitação de recursos do Chromium em segundo plano. Isso pode ajudar com economia de bateria, mas pode quebrar funcionalidade das notificações.",
     "settings-transparency-modern": "Moderno",
-    "settings-transparency-tahoe-warning": "Transparência pode causar perda excessiva de performance em MacOS 26 (Tahoe).",
+    "settings-transparency-tahoe-warning": "Transparência pode causar perda excessiva de performance em macOS 26 (Tahoe).",
     "settings-venmic-workaround": "Solução alternativa/temporária",
     "settings-venmic-workaround-desc": "Ativa ou desativa a solução alternativa para um problema que causa o microfone ser compartilhado, invés do áudio escolhido.",
     "settings-venmic-deviceSelect": "Escolha o dispositivo",

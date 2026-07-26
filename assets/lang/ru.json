@@ -26,7 +26,7 @@
     "settings-transparency-universal": "Универсальный",
     "settings-transparency-modern": "Современный",
     "settings-theme-transparent": "Прозрачный",
-    "settings-transparency-tahoe-warning": "Прозрачность может вызывать чрезмерные лаги на MacOS 26 Tahoe.",
+    "settings-transparency-tahoe-warning": "Прозрачность может вызывать чрезмерные лаги на macOS 26 Tahoe.",
     "settings-popoutPiP": "Всплывающее окно вызова поверх всех окон",
     "settings-popoutPiP-desc": "При включении этой функции всплывающее окно вызова всегда будет отображаться в режиме Поверх всех окон.",
     "settings-venmic-deviceSelect": "Выбор устройства",

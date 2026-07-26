@@ -27,7 +27,7 @@
     "settings-transparency-universal": "Universal",
     "settings-transparency-modern": "Modern",
     "settings-theme-transparent": "Transparent",
-    "settings-transparency-tahoe-warning": "Transparency may cause excessive lag on MacOS 26 Tahoe.",
+    "settings-transparency-tahoe-warning": "Transparency may cause excessive lag on macOS 26 Tahoe.",
     "settings-material": "Window Material",
     "settings-material-desc": "Set the Windows background material Legcord uses.",
     "settings-material-mica": "Mica",

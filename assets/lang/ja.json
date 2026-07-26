@@ -31,6 +31,6 @@
     "settings-transparency-desc": "Legcordの透明化モードを設定します。",
     "settings-transparency-universal": "ユニバーサル",
     "settings-transparency-modern": "モダン",
-    "settings-transparency-tahoe-warning": "MacOS 26 Tahoeにおいて、透明化は過度なラグを引き起こす可能性があります。",
+    "settings-transparency-tahoe-warning": "macOS 26 Tahoeにおいて、透明化は過度なラグを引き起こす可能性があります。",
     "detectable-themes": "テーマ"
 }
