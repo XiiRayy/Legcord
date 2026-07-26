@@ -29,6 +29,52 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.3.0" date="2026-07-26" type="stable">
+      <url>https://github.com/Legcord/Legcord/releases/tag/v1.3.0</url>
+      <description>
+        <p>What’s New in Legcord v1.3.0 ✨</p>
+        <ul>
+          <li>🖥️ **Hardware accelerated screensharing on Windows &amp; macOS**</li>
+          <li>🎨 **Redesigned screenshare picker UI**</li>
+        </ul>
+        <ul>
+          <li>🖼️ **Redesigned Settings page, Themes page, About window**</li>
+        </ul>
+        <ul>
+          <li>⚙️ **Settings sidebar icons**</li>
+        </ul>
+        <ul>
+          <li>🍎 **macOS native system audio loopback capture**</li>
+        </ul>
+        <ul>
+          <li>🐧 **Wayland global keybind support**</li>
+        </ul>
+        <ul>
+          <li>⚡ **Performance &amp; startup optimizations**</li>
+        </ul>
+        <ul>
+          <li>🔒 **Security enhancements &amp; protocol changes**</li>
+        </ul>
+        <ul>
+          <li>🖼️ **CSS Editor now loads locally**</li>
+        </ul>
+        <ul>
+          <li>🛡️ Fixed potential JS injection via `navigateTo` deep links ([https://github.com/Legcord/Legcord/pull/1074](https://github.com/Legcord/Legcord/pull/1074) by @youtsuhodev).</li>
+          <li>🎙️ Fixed Windows microphone drop in `getUserMedia` patch ([https://github.com/Legcord/Legcord/pull/1088](https://github.com/Legcord/Legcord/pull/1088) by @Kolhun).</li>
+          <li>🖥️ Fixed window state restoration across mixed-DPI multi-monitor setups ([https://github.com/Legcord/Legcord/pull/1110](https://github.com/Legcord/Legcord/pull/1110) by @Sickjuicy).</li>
+          <li>🍏 Fixed macOS traffic light positioning on 'Overlay' window style ([https://github.com/Legcord/Legcord/pull/1134](https://github.com/Legcord/Legcord/pull/1134) by @isaxk).</li>
+          <li>🚀 Fixed blank settings and theme on first launch ([https://github.com/Legcord/Legcord/pull/1101](https://github.com/Legcord/Legcord/pull/1101) by @youtsuhodev).</li>
+          <li>📦 Updated Flatpak metainfo for full Flathub compatibility ([https://github.com/Legcord/Legcord/pull/1111](https://github.com/Legcord/Legcord/pull/1111) &amp; [https://github.com/Legcord/Legcord/pull/1112](https://github.com/Legcord/Legcord/pull/1112) by @imide).</li>
+          <li>📦 Added license and dependency metadata to Debian target ([https://github.com/Legcord/Legcord/pull/1130](https://github.com/Legcord/Legcord/pull/1130) by @renangiuliasse).</li>
+          <li>🛠️ Updated AppImage toolset per Electron Builder docs ([https://github.com/Legcord/Legcord/pull/1136](https://github.com/Legcord/Legcord/pull/1136) by @imide).</li>
+          <li>🤖 Uploaded `generated-sources.json` with release artifacts ([https://github.com/Legcord/Legcord/pull/1119](https://github.com/Legcord/Legcord/pull/1119) by @imide).</li>
+          <li>🧹 Fixed injection TypeError ([https://github.com/Legcord/Legcord/pull/1085](https://github.com/Legcord/Legcord/pull/1085) by @youtsuhodev).</li>
+          <li>🧹 Resolved all Biome lint errors and formatted codebase ([https://github.com/Legcord/Legcord/pull/1100](https://github.com/Legcord/Legcord/pull/1100) &amp; [https://github.com/Legcord/Legcord/pull/1117](https://github.com/Legcord/Legcord/pull/1117) by @youtsuhodev).</li>
+          <li>📖 Added clipboard fallback plugin documentation example ([https://github.com/Legcord/Legcord/pull/1123](https://github.com/Legcord/Legcord/pull/1123) by @NigelThorne).</li>
+          <li>🧹 Bumped all depedencies</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.4" date="2026-04-15" type="stable">
       <url>https://github.com/Legcord/Legcord/releases/tag/v1.2.4</url>
       <description>
