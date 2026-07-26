@@ -539,10 +539,18 @@ export function createWindow() {
                 symbolColor: "#99aab5",
                 height: 30,
             };
-            browserWindowOptions.trafficLightPosition = {
-                x: 10,
-                y: 8.5,
-            };
+            // IF OS release is Tahoe or newer
+            if (Number.parseInt(os.release(), 10) >= 25) {
+                browserWindowOptions.trafficLightPosition = {
+                    x: 10,
+                    y: 8.5,
+                };
+            } else {
+                browserWindowOptions.trafficLightPosition = {
+                    x: 10,
+                    y: 10,
+                };
+            }
             break;
     }
     switch (getConfig("transparency")) {
