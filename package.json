@@ -49,7 +49,7 @@
         "electron-builder": "26.15.7",
         "lucide-solid": "^1.26.0",
         "monaco-editor": "0.56.0",
-        "rolldown": "1.2.0",
+        "rolldown": "1.2.7",
         "rollup-plugin-copy": "^3.5.0",
         "solid-js": "^1.9.14",
         "solid-motionone": "^1.0.4",
